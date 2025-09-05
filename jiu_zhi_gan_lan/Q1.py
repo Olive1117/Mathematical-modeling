@@ -1,8 +1,8 @@
 import numpy as np
 
 from core import Scene
-from box_targets import BoxTarget
 from drones import Drone
+from box_targets import BoxTarget
 from cloud import Cloud
 from missiles import *
 

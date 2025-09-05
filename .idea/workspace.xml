@@ -5,12 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5690fcbc-a8b2-4311-9707-a467ac278ae2" name="更改" comment="update">
+      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_1.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q1.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q1.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/missiles.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/missiles.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -20,7 +31,10 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python.Q2_2.executor": "Run",
     "git-widget-placeholder": "main",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)"
   }
 }]]></component>
@@ -36,6 +50,7 @@
     <SUITE FILE_PATH="coverage/test_py$Q2.coverage" NAME="Q2 覆盖结果" MODIFIED="1756903845025" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python代码" />
     <SUITE FILE_PATH="coverage/test_py$_Y_3D_3D_.coverage" NAME="双 Y 轴折线图、带填充区域的折线图、分组箱线图、3D 柱状图、3D 等高线图、误差棒图（横向）、矩阵散点图、堆叠面积图、带数据标签的柱状图、极坐标折线图 覆盖结果" MODIFIED="1756904239704" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
     <SUITE FILE_PATH="coverage/Mathematical_modeling$Q1.coverage" NAME="Q1 覆盖结果" MODIFIED="1757056367608" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2_2.coverage" NAME="Q2_2 覆盖结果" MODIFIED="1757063055442" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
     <SUITE FILE_PATH="coverage/test_py$.coverage" NAME="基础散点图、带趋势线的散点图、分组散点图、气泡图、基础折线图、多系列折线图、带误差线的折线图、阶梯折线图、基础柱状图、水平柱状图 覆盖结果" MODIFIED="1756904072309" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
     <SUITE FILE_PATH="coverage/test_py$BQ1.coverage" NAME="BQ1 覆盖结果" MODIFIED="1756826240487" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python代码" />
   </component>

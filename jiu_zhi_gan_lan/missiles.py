@@ -51,18 +51,21 @@ class Missile(Entity):
 
         # 2. 红外阶段：未锁定前持续探测 + 遮挡计时
         if self.ir_on and not self.locked:
-            cloud = self.scene.cloud[0]
-            target = self.scene.targets[0]
-            now_blocked = False if cloud is None else not missile_can_see_target(self, cloud, target)
+            if not self.scene.cloud:  # ★ 新增：空列表直接认为“无云”
+                now_blocked = False
+            else:
+                cloud = self.scene.cloud[0]
+                target = self.scene.targets[0]
+                now_blocked = False if cloud is None else not missile_can_see_target(self, cloud, target)
             # 累积计时
             if now_blocked:
                 self.blocked_timer += dt
             # 可选：刚进入/离开遮挡时可触发事件
             self.prev_blocked = now_blocked
 
-            # 发现目标（未被遮）→ 锁定
-            if not now_blocked:
-                self.locked = True
+            # # 发现目标（未被遮）→ 锁定
+            # if not now_blocked:
+            #     self.locked = True
 
         # 3. 末段 5 g 限制转向真目标
         if self.locked:
