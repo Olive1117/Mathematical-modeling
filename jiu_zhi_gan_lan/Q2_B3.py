@@ -257,7 +257,7 @@ def enhanced_black_hole_anneal():
     # ==================== 参数设置 ====================
     base_radius = 100.0
     T0 = 50
-    alpha = 0.9
+    alpha = 0.92
     inner_iterations = 50
     max_phases = 100 # 总阶段数减少，加快收敛
 
@@ -284,8 +284,8 @@ def enhanced_black_hole_anneal():
 
     # ==================== 随机测试数据 - 用于验证算法 ====================
     # 注释：这里可以取消注释来测试随机数据点
-    # test_point = np.array([17250.0, 25.0, 1750.0])  # 随机测试点
-    # test_t = 4.2  # 随机测试时间
+    test_point = np.array([-7700,2000,1500])  # 随机测试点
+    #test_t = 4.2  # 随机测试时间
     # test_energy = energy_function(test_point, test_t)
     # print(f"随机测试点能量: {test_energy:.4f}s")
 
