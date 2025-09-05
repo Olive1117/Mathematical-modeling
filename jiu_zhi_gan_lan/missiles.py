@@ -61,8 +61,8 @@ class Missile(Entity):
             self.prev_blocked = now_blocked
 
             # 发现目标（未被遮）→ 锁定
-            # if not now_blocked:
-            #     self.locked = True
+            if not now_blocked:
+                self.locked = True
 
         # 3. 末段 5 g 限制转向真目标
         if self.locked:
