@@ -4,6 +4,11 @@ import pandas as pd
 from dataclasses import dataclass
 from typing import List, Tuple, Protocol
 
+from cloud import Cloud
+from box_targets import BoxTarget
+from drones import Drone
+from missiles import Missile
+
 # ---------- 基础向量工具 ----------
 Vec3 = np.ndarray   # shape (3,)
 
@@ -16,17 +21,6 @@ def normalize(v: Vec3) -> Vec3:
     n = norm(v)
     return v / n if n > 1e-8 else np.zeros(3)
 
-
-# ---------- 烟幕云团 ----------
-@dataclass
-class Cloud:
-    centre: Vec3
-    radius: float = 10.0          # 有效遮蔽半径
-
-    def contains(self, p: Vec3) -> bool:
-        return norm(p - self.centre) <= self.radius
-
-
 # ---------- 实体协议 ----------
 class Entity(Protocol):
     def update(self, dt: float): ...
@@ -37,9 +31,14 @@ class Entity(Protocol):
 # ---------- 场景 ----------
 class Scene:
     def __init__(self):
+        # entities数据结构 [[目标列表], [导弹列表], [无人机列表]]
         self.entities: List[Entity] = []
         self.clouds: List[Cloud] = []
         self.log: List[dict] = []
+        self.targets: List[BoxTarget] = []
+        self.missile: List[Missile] = []
+        self.drone: List[Drone] = []
+        self.cloud: List[Cloud] = []
 
     def add(self, e: Entity):
         self.entities.append(e)

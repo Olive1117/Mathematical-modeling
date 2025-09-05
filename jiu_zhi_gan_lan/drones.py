@@ -1,15 +1,17 @@
 import numpy as np
-from core import Entity, Vec3, Cloud
+from core import Entity, Vec3, Scene
+from cloud import Cloud
+
 
 # ---------- 无人机 ----------
 
 class Drone(Entity):
-    def __init__(self, id_: int, pos0: Vec3, vel: Vec3):
+    def __init__(self, id_: int, pos0: Vec3, bomb_int):
         self.id = id_
         self._pos = pos0.astype(float).copy()
-        self._vel = vel.astype(float).copy()
+        self._vel = np.array([0, 0, 0]).astype(float).copy()
         self.dead = False
-        self.bombs: list[Bomb] = []
+        self.bombs: int = bomb_int
 
     def pos(self) -> Vec3:
         return self._pos
@@ -25,16 +27,16 @@ class Drone(Entity):
 
 
 class Bomb:
-    def __init__(self, delay: float, burst_pos: Vec3, scene):
-        self.delay = delay
-        self.burst_pos = burst_pos
-        self.scene = scene
-        self.dropped = False
+    def __init__(self, delay: float, burst_pos: Vec3, scene: Scene):
+        self.delay = delay          # 爆炸倒计时（秒）
+        self.burst_pos = burst_pos  # 爆炸发生的三维坐标
+        self.scene = scene          # 场景对象，里面至少有一个 clouds 列表
+        self.dropped = False        # 标记是否已经爆炸过
 
     def update(self, dt: float):
         if self.dropped:
             return
         self.delay -= dt
         if self.delay <= 0:
-            self.scene.clouds.append(Cloud(self.burst_pos))
+            self.scene.clouds.append(Cloud(centre = self.burst_pos))
             self.dropped = True

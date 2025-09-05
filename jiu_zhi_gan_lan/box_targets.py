@@ -1,6 +1,6 @@
 import numpy as np
 from dataclasses import dataclass
-from core import Entity, Vec3, Cloud
+from core import Entity, Vec3
 
 # ---------- 目标 ----------
 
