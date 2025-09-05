@@ -51,8 +51,8 @@ bang_pos = np.array([
 c = Cloud(1, bang_pos, scene)
 # 模拟运行
 t = 0.0
-dt = 0.1
-for _ in range(int(t_drop+t_bang)*10):
+dt = 0.001
+for _ in range(int(t_drop+t_bang)*1000):
     scene.step(t, dt)
     t += dt
 print("M1导弹当前位置：", scene.missile[0].pos())
@@ -61,8 +61,8 @@ print("烟雾弹起爆点坐标 (m):", bang_pos)
 print(scene.missile[0].prev_blocked)
 scene.cloud.append(c)
 scene.missile[0].ir_on = True
-for _ in range(int(20)*10):
-    print(scene.missile[0].locked)
+for _ in range(int(20)*1000):
+    print(scene.missile[0].prev_blocked)
 
     scene.step(t, dt)
     t += dt
