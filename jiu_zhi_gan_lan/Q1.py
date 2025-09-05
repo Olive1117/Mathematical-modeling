@@ -1,8 +1,8 @@
 import numpy as np
 
 from core import Scene
-from box_targets import BoxTarget
 from drones import Drone
+from box_targets import BoxTarget
 from cloud import Cloud
 from missiles import *
 
@@ -56,7 +56,7 @@ for _ in range(int(t_drop+t_bang)*1000):
     scene.step(t, dt)
     t += dt
 print("M1导弹当前位置：", scene.missile[0].pos())
-print("m1导弹被遮挡状态：", scene.missile[0].get_blocked_time())
+print("m1导弹有效被遮挡时长：", scene.missile[0].get_blocked_time())
 print("烟雾弹起爆点坐标 (m):", bang_pos)
 print(scene.missile[0].prev_blocked)
 scene.cloud.append(c)
@@ -66,6 +66,6 @@ for _ in range(int(20)*1000):
 
     scene.step(t, dt)
     t += dt
-print("m1导弹被遮挡状态：", scene.missile[0].get_blocked_time())
+print("m1导弹有效被遮挡时长：", scene.missile[0].get_blocked_time())
 print("M1导弹当前位置：", scene.missile[0].pos())
 print("烟雾弹坐标 (m):", scene.cloud[0].pos())
