@@ -257,9 +257,9 @@ def enhanced_black_hole_anneal():
     # ==================== 参数设置 ====================
     base_radius = 100.0
     T0 = 50
-    alpha = 0.88  # 温度衰减系数从0.95改为0.88，加快降温速度
+    alpha = 0.9
     inner_iterations = 50
-    max_phases = 20  # 总阶段数减少，加快收敛
+    max_phases = 100 # 总阶段数减少，加快收敛
 
     print(f"\n退火参数: base_radius={base_radius}, T0={T0}, alpha={alpha} (温度衰减加快)")
     print(f"速度约束: [{MIN_DRONE_SPEED}, {MAX_DRONE_SPEED}] m/s")
