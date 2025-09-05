@@ -1,0 +1,83 @@
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"Black\">\r\n    <option name=\"sdkName\" value=\"C:\\ProgramData\\anaconda3\" />\r\n  </component>\r\n  <component name=\"ProjectRootManager\" version=\"2\" project-jdk-name=\"Python 3.12 (Mathematical-modeling)\" project-jdk-type=\"Python SDK\" />\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision edf4f503ba448b18f6292b07614863e4c7c3d358)
++++ b/.idea/misc.xml	(date 1757063247148)
+@@ -4,4 +4,7 @@
+     <option name="sdkName" value="C:\ProgramData\anaconda3" />
+   </component>
+   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (Mathematical-modeling)" project-jdk-type="Python SDK" />
++  <component name="PythonCompatibilityInspectionAdvertiser">
++    <option name="version" value="3" />
++  </component>
+ </project>
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/missile_run_photo.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/missile_run_photo.py b/jiu_zhi_gan_lan/missile_run_photo.py
+new file mode 100644
+--- /dev/null	(date 1757062593995)
++++ b/jiu_zhi_gan_lan/missile_run_photo.py	(date 1757062593995)
+@@ -0,0 +1,54 @@
++import  numpy as np
++import matplotlib.pyplot as plt
++radius: float = 7.0
++height: float = 10.0
++# 1. 离散圆柱
++N = 16
++ang = np.linspace(0, 2 * np.pi, N, endpoint=False)
++dR = np.stack([np.cos(ang), np.sin(ang), np.zeros(N)], axis=1)
++bottom = np.array([0.0, 200.0, 0.0]) + dR * radius
++top = bottom + np.array([0, 0, height])
++
++# 2. 生成所有边（底面、顶面、母线）
++edges = []
++for i in range(N):
++    j = (i + 1) % N
++    edges.append((bottom[i], bottom[j]))  # 底边
++    edges.append((top[i], top[j]))  # 顶边
++    edges.append((bottom[i], top[i]))  # 竖边
++
++# 3. 对每条边采样
++n_sample = 8  # 每条边采样点数
++ts = np.linspace(0, 1, n_sample)
++
++for A, B in edges:
++    for t in ts:
++        p = (1 - t) * A + t * B
++
++# 4. 收集所有采样点
++points = []
++for A, B in edges:
++    for t in ts:
++        p = (1 - t) * A + t * B
++        points.append(p)
++points = np.array(points)          # shape: (M, 3)
++
++# 5. 绘制 3D 散点图
++from mpl_toolkits.mplot3d import Axes3D   # 必须导入，哪怕看似没用到
++fig = plt.figure(figsize=(8,8))
++ax = fig.add_subplot(111, projection='3d')
++ax.scatter(points[:, 0], points[:, 1], points[:, 2],
++           s=15, c='tab:blue', marker='o')
++
++# 6. 美化
++ax.set_box_aspect([1, 1, 1.2])          # 保持比例
++ax.set_xlabel('X')
++ax.set_ylabel('Y')
++ax.set_zlabel('Z')
++ax.set_title('Discrete Cylinder Point Cloud')
++ax.view_init(elev=20, azim=-45)
++ax.tick_params(axis='x', labelsize=8)
++ax.xaxis.pane.fill = False
++plt.tight_layout()
++plt.show()
++
