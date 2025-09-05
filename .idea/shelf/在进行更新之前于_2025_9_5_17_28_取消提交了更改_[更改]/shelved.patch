@@ -1,0 +1,73 @@
+Index: jiu_zhi_gan_lan/Q2_1.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from box_targets import BoxTarget\r\nfrom cloud import Cloud\r\nfrom missiles import *\r\ndef eval_block(x, y, z, t):\r\n    \"\"\"\r\n    起爆点坐标 + 起爆时刻 → 有效遮挡时长（秒）\r\n    内部直接调你现成的 Scene，跑 20 s 云团寿命即可\r\n    \"\"\"\r\n    scene = Scene()\r\n    scene.targets.append(BoxTarget(0, scene))\r\n    m = Missile(0, np.array([20000, 0, 2000]), scene)\r\n    scene.missile.append(m)\r\n\r\n    # 1. 把时间轴直接拨到起爆瞬间，导弹先插值到 t 时刻\r\n    dt = 0.1\r\n    for _ in range(int(t/dt)):\r\n        scene.step(t, dt)\r\n        t += dt\r\n    cloud = Cloud(1, np.array([x, y, z]), scene)\r\n    scene.cloud.append(cloud)\r\n    print(\"M1导弹当前位置：\", scene.missile[0].pos())\r\n    print(\"m1导弹有效被遮挡时长：\", scene.missile[0].get_blocked_time())\r\n    print(\"烟雾弹起爆点坐标 (m):\", bang_pos)\r\n    # 2. 跑完云团 20 s 寿命\r\n    dt = 0.01\r\n    for _ in range(int(20/dt)):\r\n        scene.step(t, dt)\r\n        t += dt\r\n    print(\"已经执行一次仿真，最大遮挡时长：\", scene.missile[0].get_blocked_time())\r\n    print(\"m1导弹有效被遮挡时长：\", scene.missile[0].get_blocked_time())\r\n    print(\"M1导弹当前位置：\", scene.missile[0].pos())\r\n    print(\"烟雾弹坐标 (m):\", scene.cloud[0].pos())\r\n    return scene.missile[0].get_blocked_time()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/Q2_1.py b/jiu_zhi_gan_lan/Q2_1.py
+--- a/jiu_zhi_gan_lan/Q2_1.py	(revision 549dbc7d4bd531093282a6aca8e9a607be1f9486)
++++ b/jiu_zhi_gan_lan/Q2_1.py	(date 1757064466074)
+@@ -18,9 +18,6 @@
+         t += dt
+     cloud = Cloud(1, np.array([x, y, z]), scene)
+     scene.cloud.append(cloud)
+-    print("M1导弹当前位置：", scene.missile[0].pos())
+-    print("m1导弹有效被遮挡时长：", scene.missile[0].get_blocked_time())
+-    print("烟雾弹起爆点坐标 (m):", bang_pos)
+     # 2. 跑完云团 20 s 寿命
+     dt = 0.01
+     for _ in range(int(20/dt)):
+Index: jiu_zhi_gan_lan/Q2_2.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from skopt import gp_minimize\r\n\r\nfrom Q2_1 import eval_block\r\n\r\n# # 搜索空间：x y z t 四维\r\n# space = [\r\n#     (16500, 17500),   # x  导弹航线附近 ±2 km\r\n#     (-100, 100),    # y  左右 1 km\r\n#     (1400, 1800),        # z  0~1500 m\r\n#     (3, 8)           # t  0~80 s\r\n# ]\r\n#\r\n# def obj(v):\r\n#     x, y, z, t = v\r\n#     print(\"x=\", x, \"y=\", y, \"z=\", z, \"t=\", t)\r\n#     return -eval_block(x, y, z, t)   # 负号：skopt 求最小\r\n#\r\n# res = gp_minimize(obj, space, n_calls=40, random_state=0)\r\n# x_opt, y_opt, z_opt, t_opt = res.x\r\n# print(\"最优爆点：x=%.1f y=%.1f z=%.1f t=%.2f s\" % (x_opt, y_opt, z_opt, t_opt))\r\n# print(\"最大遮挡时长：%.3f s\" % -res.fun)\r\n\r\neval_block(17188,0, 1736, 5.1)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/Q2_2.py b/jiu_zhi_gan_lan/Q2_2.py
+--- a/jiu_zhi_gan_lan/Q2_2.py	(revision 549dbc7d4bd531093282a6aca8e9a607be1f9486)
++++ b/jiu_zhi_gan_lan/Q2_2.py	(date 1757064466069)
+@@ -2,22 +2,22 @@
+ 
+ from Q2_1 import eval_block
+ 
+-# # 搜索空间：x y z t 四维
+-# space = [
+-#     (16500, 17500),   # x  导弹航线附近 ±2 km
+-#     (-100, 100),    # y  左右 1 km
+-#     (1400, 1800),        # z  0~1500 m
+-#     (3, 8)           # t  0~80 s
+-# ]
+-#
+-# def obj(v):
+-#     x, y, z, t = v
+-#     print("x=", x, "y=", y, "z=", z, "t=", t)
+-#     return -eval_block(x, y, z, t)   # 负号：skopt 求最小
+-#
+-# res = gp_minimize(obj, space, n_calls=40, random_state=0)
+-# x_opt, y_opt, z_opt, t_opt = res.x
+-# print("最优爆点：x=%.1f y=%.1f z=%.1f t=%.2f s" % (x_opt, y_opt, z_opt, t_opt))
+-# print("最大遮挡时长：%.3f s" % -res.fun)
++# 搜索空间：x y z t 四维
++space = [
++    (16500, 17500),   # x  导弹航线附近 ±2 km
++    (-100, 100),    # y  左右 1 km
++    (1400, 1800),        # z  0~1500 m
++    (3, 8)           # t  0~80 s
++]
++
++def obj(v):
++    x, y, z, t = v
++    print("x=", x, "y=", y, "z=", z, "t=", t)
++    return -eval_block(x, y, z, t)   # 负号：skopt 求最小
++
++res = gp_minimize(obj, space, n_calls=40, random_state=0)
++x_opt, y_opt, z_opt, t_opt = res.x
++print("最优爆点：x=%.1f y=%.1f z=%.1f t=%.2f s" % (x_opt, y_opt, z_opt, t_opt))
++print("最大遮挡时长：%.3f s" % -res.fun)
+ 
+-eval_block(17188,0, 1736, 5.1)
+\ No newline at end of file
++# eval_block(17188,0, 1736, 5.1)
+\ No newline at end of file
