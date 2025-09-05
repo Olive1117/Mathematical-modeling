@@ -1,13 +1,14 @@
 import numpy as np
 
-from core import Cloud, Vec3, normalize, norm
-from box_targets import BoxTarget
-from missiles import Missile
+from core import Vec3, normalize, norm
+# from box_targets import BoxTarget
+# from cloud import Cloud
+# from missiles import Missile
 
 # TODO 导弹视觉模拟已经写好了，需要的参数有导弹类的当前坐标，云团类的坐标半径，目标类的
 # ---------- 导弹视觉模拟 ----------
 
-def missile_can_see_target(missile: Missile, cloud: Cloud, target: BoxTarget) -> bool:
+def missile_can_see_target(missile, cloud, target) -> bool:
     """
     视锥判断：
 

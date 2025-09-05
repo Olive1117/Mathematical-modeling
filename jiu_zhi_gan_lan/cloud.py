@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from core import Vec3, norm, Entity, Scene
-from missile_search import missile_can_see_target
 
 
 # ---------- 烟幕云团 ----------
@@ -14,11 +13,19 @@ class Cloud(Entity):
         self.scene= scene
         self.dead: bool = False
 
+    def pos(self) -> Vec3:
+        return self.centre
+
     def contains(self, p: Vec3) -> bool:
         return norm(p - self.centre) <= self.radius
 
     def update (self, dt: float):
         if self.dead:
             return
+        # 云团以 3 m/s 匀速下降
+        self.centre[2] -= 3.0 * dt
 
-        if missile_can_see_target()
+        # 持续时间递减
+        self.duration -= dt
+        if self.duration <= 0:
+            self.dead = True

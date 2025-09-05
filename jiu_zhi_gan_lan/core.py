@@ -4,11 +4,6 @@ import pandas as pd
 from dataclasses import dataclass
 from typing import List, Tuple, Protocol
 
-from cloud import Cloud
-from box_targets import BoxTarget
-from drones import Drone
-from missiles import Missile
-
 # ---------- 基础向量工具 ----------
 Vec3 = np.ndarray   # shape (3,)
 
@@ -33,18 +28,23 @@ class Scene:
     def __init__(self):
         # entities数据结构 [[目标列表], [导弹列表], [无人机列表]]
         self.entities: List[Entity] = []
-        self.clouds: List[Cloud] = []
         self.log: List[dict] = []
-        self.targets: List[BoxTarget] = []
-        self.missile: List[Missile] = []
-        self.drone: List[Drone] = []
-        self.cloud: List[Cloud] = []
+        self.targets: List[Entity] = []
+        self.missile: List[Entity] = []
+        self.drone: List[Entity] = []
+        self.cloud: List[Entity] = []
 
     def add(self, e: Entity):
         self.entities.append(e)
 
     def step(self, t: float, dt: float):
-        for e in self.entities:
+        for e in self.targets:
+            e.update(dt)
+        for e in self.missile:
+            e.update(dt)
+        for e in self.drone:
+            e.update(dt)
+        for e in self.cloud:
             e.update(dt)
         # TODO 待修改，改成图表可以读取的格式
         # 记录快照

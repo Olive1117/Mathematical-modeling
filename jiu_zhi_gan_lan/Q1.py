@@ -1,17 +1,18 @@
 import numpy as np
 
-# from core import Scene
-# from box_targets import BoxTarget
-# from drones import Drone
-# from missiles import Missile
+from core import Scene
+from box_targets import BoxTarget
+from drones import Drone
+from cloud import Cloud
+from missiles import *
 
-# scene = Scene()
-#
-# t = BoxTarget()
-# scene.targets.append(t)
-#
-# m = Missile(0, np.array([20000, 0, 2000]), scene)
-# scene.missile.append(m)
+scene = Scene()
+
+t = BoxTarget(0, scene)
+scene.targets.append(t)
+
+m = Missile(0, np.array([20000, 0, 2000]), scene)
+scene.missile.append(m)
 
 # 已知参数
 fy1_pos = np.array([17800.0, 0.0, 1800.0])  # FY1初始位置 (m)
@@ -23,17 +24,18 @@ g = 9.8                                     # 重力加速度 (m/s^2)
 
 # 1. 计算FY1飞行方向单位向量
 direction = fake_pos - fy1_pos
-
+direction[2] = 0.0
 direction = direction / np.linalg.norm(direction)
 
-# 2. 计算投放点位置
-drop_pos = fy1_pos + v_fy * t_drop * direction
+# 2. 计算投放点位置（z坐标不变）
+drop_pos = fy1_pos.copy()
+drop_pos[:2] += v_fy * t_drop * direction[:2]  # 仅更新x,y
 
 # 3. 计算起爆点位置
 # 水平速度向量（x, y 分量）
 v_hor = v_fy * direction[:2]
 # 初始垂直速度（z 分量）
-v_z0 = v_fy * direction[2]
+v_z0 = 0
 
 # 水平位移
 delta_xy = v_hor * t_bang
@@ -46,5 +48,24 @@ bang_pos = np.array([
     drop_pos[1] + delta_xy[1],
     drop_pos[2] + delta_z
 ])
-
+c = Cloud(1, bang_pos, scene)
+# 模拟运行
+t = 0.0
+dt = 0.1
+for _ in range(int(t_drop+t_bang)*10):
+    scene.step(t, dt)
+    t += dt
+print("M1导弹当前位置：", scene.missile[0].pos())
+print("m1导弹被遮挡状态：", scene.missile[0].get_blocked_time())
 print("烟雾弹起爆点坐标 (m):", bang_pos)
+print(scene.missile[0].prev_blocked)
+scene.cloud.append(c)
+scene.missile[0].ir_on = True
+for _ in range(int(20)*10):
+    print(scene.missile[0].locked)
+
+    scene.step(t, dt)
+    t += dt
+print("m1导弹被遮挡状态：", scene.missile[0].get_blocked_time())
+print("M1导弹当前位置：", scene.missile[0].pos())
+print("烟雾弹坐标 (m):", scene.cloud[0].pos())

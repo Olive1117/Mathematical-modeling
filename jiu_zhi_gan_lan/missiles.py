@@ -33,6 +33,10 @@ class Missile(Entity):
     def pos(self) -> Vec3:
         return self._pos
 
+    # >>> 可选：外部读取被遮时长
+    def get_blocked_time(self) -> float:
+        return self.blocked_timer
+
     def update(self, dt: float) -> None:
         if self.dead:
             return
@@ -47,8 +51,8 @@ class Missile(Entity):
 
         # 2. 红外阶段：未锁定前持续探测 + 遮挡计时
         if self.ir_on and not self.locked:
-            cloud = self.scene.cloud
-            target = self.scene.targets
+            cloud = self.scene.cloud[0]
+            target = self.scene.targets[0]
             now_blocked = False if cloud is None else not missile_can_see_target(self, cloud, target)
             # 累积计时
             if now_blocked:
@@ -57,12 +61,12 @@ class Missile(Entity):
             self.prev_blocked = now_blocked
 
             # 发现目标（未被遮）→ 锁定
-            if not now_blocked:
-                self.locked = True
+            # if not now_blocked:
+            #     self.locked = True
 
         # 3. 末段 5 g 限制转向真目标
         if self.locked:
-            tgt = self.scene.entities[0]
+            tgt = self.scene.targets[0].pos()
             los = normalize(tgt - self._pos)
             old_dir = normalize(self._vel)
             cos_theta = np.clip(old_dir @ los, -1, 1)
@@ -78,9 +82,6 @@ class Missile(Entity):
 
         # 4. 积分 & 命中
         self._pos += self._vel * dt
-        if norm(self._pos - self.scene.truth_pos) <= KILL_RANGE:
+        if norm(self._pos - self.scene.targets[0].centre_bottom) <= KILL_RANGE:
             self.dead = True
 
-    # >>> 可选：外部读取被遮时长
-    def get_blocked_time(self) -> float:
-        return self.blocked_timer
