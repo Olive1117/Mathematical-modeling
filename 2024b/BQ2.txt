@@ -1,0 +1,44 @@
+n=0;
+pa=[0.1,0.2,0.1,0.2,0.1,0.05];
+buya=4;ca=[2,2,2,1,8,2];
+pb=[0.1,0.2,0.1,0.2,0.2,0.05];
+buyb=18;cb=[3,3,3,1,1,3];
+p0=[0.1,0.2,0.1,0.2,0.1,0.05];
+buy0=6;c0=[3,3,3,2,2,3];sell=56;
+lose=[6,6,30,30,10,10];
+d=[5,5,5,5,5,40];
+da=zeros(1,6);db=zeros(1,6);
+for j=0:1
+    for k=0:1
+        if k==0
+            db=pb;
+         else
+         db=0;
+        end
+    end
+    if j==0
+        da=pa;
+    else
+        da=0;
+    end
+end
+vaild_n=min(n.*(1-da),n.*(1-db))
+
+p1=1-(1-p0).*(1-da).*(1-db)
+rise=zeros(1,6);
+cost1=zeros(1,6);
+cost2=zeros(1,6);
+for m=0:1
+    for n=0:1
+        if m==0 && n==0
+            rise=56.*vaild_n.*(1-p1)
+            cost2=vaild_n.*lose.*(1-p1)
+        if m==0 && n==1 
+            rise=56.*vaild_n*(1-pa)*(1-pb)
+            cost2=
+        if m==1 && n==0
+            rise=56.*valid_n.*(1-p1)
+            cost2=vaild_n.*c0
+        if m==1 && n==1
+            rise=56.*vaild_n.*(1-pa)*(1-pb)
+            cost2=
