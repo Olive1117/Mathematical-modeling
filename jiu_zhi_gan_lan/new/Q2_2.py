@@ -3,6 +3,7 @@ from missile_search import validity_time
 from matplotlib import pyplot as plt
 from scipy.optimize import basinhopping, minimize
 import random
+import numpy as np
 from matplotlib.ticker import MaxNLocator
 # 最简化的字体设置，确保兼容性
 plt.rcParams["font.family"] = ["SimHei", "sans-serif"]
@@ -110,7 +111,7 @@ while a:
     result_sa = basinhopping(
         objective,
         initial_params,
-        niter=500,
+        niter=50,
         minimizer_kwargs=minimizer_kwargs,
         stepsize=0.5,
         accept_test=None,
@@ -120,7 +121,7 @@ while a:
     best_params_sa = result_sa.x
     best_value_sa = -result_sa.fun/100
     pos_release, pos_detonate, time = objective_user(best_params_sa)
-
+    M = np.linalg.norm(pos_detonate - m1(best_params_sa[3]/10))
     print("\n 模拟退火优化结果")
     print(f"最佳转向角：{best_params_sa[0]*np.pi/6/10}")
     print(f"最佳速度：{best_params_sa[1]}")
@@ -129,6 +130,7 @@ while a:
     print(f"最佳引爆时间：{best_params_sa[3]/10}")
     print(f"最佳引爆点：{pos_detonate}")
     print(f"最大有效遮蔽时间： {best_value_sa}")
+    print(f"爆时烟雾与导弹距离：{M}")
 
     a_norm = [(p[0] - bounds[0][0]) / (bounds[0][1] - bounds[0][0]) for p in tracker.params_history]
     v_norm = [(p[1] - bounds[1][0]) / (bounds[1][1] - bounds[1][0]) for p in tracker.params_history]

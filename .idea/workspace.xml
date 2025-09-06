@@ -5,25 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5690fcbc-a8b2-4311-9707-a467ac278ae2" name="更改" comment="update">
-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/first_search.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q1.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q2.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q2_1.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q2_2.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/core.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/missile_search.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/po1.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/search_time_axis.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4_1.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4_2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4_3.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/gen_anneal_init.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/terms_P.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q1.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q1.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_1.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_1.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_2.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_2.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/assumptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/assumptions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/missile_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/missile_search.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/missiles.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/missiles.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/output/Q2_optimized_with_speed_check.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q2_2.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q2_2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,14 +43,19 @@
     "Python.Q2_B3.executor": "Run",
     "Python.Q2_sim.executor": "Run",
     "Python.Q3_B3.executor": "Run",
+    "Python.Q4.executor": "Run",
+    "Python.Q4_1.executor": "Run",
+    "Python.Q4_2.executor": "Run",
     "Python.core.executor": "Run",
+    "Python.gen_anneal_init.executor": "Run",
     "Python.missile_run_photo.executor": "Run",
     "Python.po1.executor": "Run",
     "Python.result_q2.executor": "Run",
+    "Python.terms_P.executor": "Run",
     "Python.基础散点图、带趋势线的散点图、分组散点图、气泡图、基础折线图、多系列折线图、带误差线的折线图、阶梯折线图、基础柱状图、水平柱状图.executor": "Run",
     "Python.矢量场图、分组点图、彩色映射折线图、3D 网格图、马赛克图、Andrews 曲线、帕累托图、树状图、彩色散点图（按第三变量着色）、3D 曲面图（带光照效果）.executor": "Run",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/Users/26577/Desktop",
+    "last_opened_file_path": "C:/Users/26577/Desktop/数学建模真题/2025/A题",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)"
@@ -70,6 +64,9 @@
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\math_model_contest\Mathematical-modeling\jiu_zhi_gan_lan" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\code\ceshi\Mathematical-modeling\jiu_zhi_gan_lan\new" />
     </key>
   </component>
   <component name="TaskManager">
@@ -97,7 +94,15 @@
       <option name="project" value="LOCAL" />
       <updated>1757103214721</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="update">
+      <option name="closed" value="true" />
+      <created>1757137056616</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1757137056616</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -106,25 +111,30 @@
     <option name="LAST_COMMIT_MESSAGE" value="update" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/test_py$___.coverage" NAME="分组柱状图、堆叠柱状图、百分比堆叠柱状图、直方图、核密度图、直方图 + 核密度图、箱线图、小提琴图、点图、基础饼图 覆盖结果" MODIFIED="1756904019989" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
     <SUITE FILE_PATH="coverage/Mathematical_modeling$Q1.coverage" NAME="Q1 覆盖结果" MODIFIED="1757135586819" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
-    <SUITE FILE_PATH="coverage/Mathematical_modeling$missile_search.coverage" NAME="missile_search 覆盖结果" MODIFIED="1757092539887" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
-    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2.coverage" NAME="Q2 覆盖结果" MODIFIED="1757134987242" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
-    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2_2.coverage" NAME="Q2_2 覆盖结果" MODIFIED="1757136449272" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$terms_P.coverage" NAME="terms_P 覆盖结果" MODIFIED="1757155840276" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
     <SUITE FILE_PATH="coverage/Mathematical_modeling$search_time_axis.coverage" NAME="search_time_axis 覆盖结果" MODIFIED="1757083937299" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
-    <SUITE FILE_PATH="coverage/Mathematical_modeling$po1.coverage" NAME="po1 覆盖结果" MODIFIED="1757136239239" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
-    <SUITE FILE_PATH="coverage/Mathematical_modeling$.coverage" NAME="基础散点图、带趋势线的散点图、分组散点图、气泡图、基础折线图、多系列折线图、带误差线的折线图、阶梯折线图、基础柱状图、水平柱状图 覆盖结果" MODIFIED="1757128446495" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$gen_anneal_init.coverage" NAME="gen_anneal_init 覆盖结果" MODIFIED="1757144194500" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
     <SUITE FILE_PATH="coverage/Mathematical_modeling$simulated_annealing.coverage" NAME="simulated_annealing 覆盖结果" MODIFIED="1757096346341" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
-    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2_B3.coverage" NAME="Q2_B3 覆盖结果" MODIFIED="1757132838766" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
-    <SUITE FILE_PATH="coverage/test_py$BQ1.coverage" NAME="BQ1 覆盖结果" MODIFIED="1756826240487" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python代码" />
     <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2_B.coverage" NAME="Q2_B 覆盖结果" MODIFIED="1757097409952" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q4_2.coverage" NAME="Q4_2 覆盖结果" MODIFIED="1757157600934" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
     <SUITE FILE_PATH="coverage/test_py$Q2.coverage" NAME="Q2 覆盖结果" MODIFIED="1756903845025" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python代码" />
-    <SUITE FILE_PATH="coverage/Mathematical_modeling$missiles.coverage" NAME="missiles 覆盖结果" MODIFIED="1757073403583" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
     <SUITE FILE_PATH="coverage/test_py$_Y_3D_3D_.coverage" NAME="双 Y 轴折线图、带填充区域的折线图、分组箱线图、3D 柱状图、3D 等高线图、误差棒图（横向）、矩阵散点图、堆叠面积图、带数据标签的柱状图、极坐标折线图 覆盖结果" MODIFIED="1756904239704" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
-    <SUITE FILE_PATH="coverage/Mathematical_modeling$3D_Andrews_3D_.coverage" NAME="矢量场图、分组点图、彩色映射折线图、3D 网格图、马赛克图、Andrews 曲线、帕累托图、树状图、彩色散点图（按第三变量着色）、3D 曲面图（带光照效果） 覆盖结果" MODIFIED="1757128476253" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
     <SUITE FILE_PATH="coverage/Mathematical_modeling$core.coverage" NAME="core 覆盖结果" MODIFIED="1757134508136" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
     <SUITE FILE_PATH="coverage/test_py$.coverage" NAME="基础散点图、带趋势线的散点图、分组散点图、气泡图、基础折线图、多系列折线图、带误差线的折线图、阶梯折线图、基础柱状图、水平柱状图 覆盖结果" MODIFIED="1756904072309" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
-    <SUITE FILE_PATH="coverage/Mathematical_modeling$first_search.coverage" NAME="first_search 覆盖结果" MODIFIED="1757076672659" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
     <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2_1.coverage" NAME="Q2_1 覆盖结果" MODIFIED="1757134921156" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
+    <SUITE FILE_PATH="coverage/test_py$___.coverage" NAME="分组柱状图、堆叠柱状图、百分比堆叠柱状图、直方图、核密度图、直方图 + 核密度图、箱线图、小提琴图、点图、基础饼图 覆盖结果" MODIFIED="1756904019989" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$missile_search.coverage" NAME="missile_search 覆盖结果" MODIFIED="1757092539887" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2.coverage" NAME="Q2 覆盖结果" MODIFIED="1757134987242" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2_2.coverage" NAME="Q2_2 覆盖结果" MODIFIED="1757156385291" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$po1.coverage" NAME="po1 覆盖结果" MODIFIED="1757136239239" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$.coverage" NAME="基础散点图、带趋势线的散点图、分组散点图、气泡图、基础折线图、多系列折线图、带误差线的折线图、阶梯折线图、基础柱状图、水平柱状图 覆盖结果" MODIFIED="1757128446495" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2_B3.coverage" NAME="Q2_B3 覆盖结果" MODIFIED="1757132838766" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
+    <SUITE FILE_PATH="coverage/test_py$BQ1.coverage" NAME="BQ1 覆盖结果" MODIFIED="1756826240487" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python代码" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$missiles.coverage" NAME="missiles 覆盖结果" MODIFIED="1757073403583" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$3D_Andrews_3D_.coverage" NAME="矢量场图、分组点图、彩色映射折线图、3D 网格图、马赛克图、Andrews 曲线、帕累托图、树状图、彩色散点图（按第三变量着色）、3D 曲面图（带光照效果） 覆盖结果" MODIFIED="1757128476253" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q4.coverage" NAME="Q4 覆盖结果" MODIFIED="1757139044163" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q4_1.coverage" NAME="Q4_1 覆盖结果" MODIFIED="1757142096726" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
+    <SUITE FILE_PATH="coverage/Mathematical_modeling$first_search.coverage" NAME="first_search 覆盖结果" MODIFIED="1757076672659" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
   </component>
 </project>
