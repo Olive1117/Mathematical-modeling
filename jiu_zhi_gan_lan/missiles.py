@@ -20,9 +20,9 @@ class Missile(Entity):
     def __init__(self, id_: int, pos0: Vec3, scene: Scene):
         self.id = id_
         self._pos = pos0.astype(float).copy()
-        self._vel = normalize(-pos0) * V
+        self._vel = normalize(-pos0) * 300
         self.scene = scene
-        self.ir_on = False
+        self.ir_on = True
         self.locked = False
         self.dead = False
         # >>> 新增：遮挡计时
@@ -41,13 +41,13 @@ class Missile(Entity):
         if self.dead:
             return
 
-        # 1. 中段盲飞→6000 m 开启红外
-        if not self.ir_on:
-            fake_tgt = np.array([0.0, 0.0, 0.0])
-            if norm(self._pos - fake_tgt) <= IR_ON_RANGE:
-                self.ir_on = True
-            else:
-                self._vel = normalize(fake_tgt - self._pos) * V
+        # # 1. 中段盲飞→6000 m 开启红外
+        # if not self.ir_on:
+        #     fake_tgt = np.array([0.0, 0.0, 0.0])
+        #     if norm(self._pos - fake_tgt) <= IR_ON_RANGE:
+        #         self.ir_on = True
+        #     else:
+        #         self._vel = normalize(fake_tgt - self._pos) * V
 
         # 2. 红外阶段：未锁定前持续探测 + 遮挡计时
         if self.ir_on and not self.locked:
@@ -55,7 +55,7 @@ class Missile(Entity):
                 now_blocked = False
             else:
                 cloud = self.scene.cloud[0]
-                target = self.scene.targets[0]
+                target = self.scene.targets
                 now_blocked = False if cloud is None else not missile_can_see_target(self, cloud, target)
             # 累积计时
             if now_blocked:
@@ -67,24 +67,24 @@ class Missile(Entity):
             # if not now_blocked:
             #     self.locked = True
 
-        # 3. 末段 5 g 限制转向真目标
-        if self.locked:
-            tgt = self.scene.targets[0].pos()
-            los = normalize(tgt - self._pos)
-            old_dir = normalize(self._vel)
-            cos_theta = np.clip(old_dir @ los, -1, 1)
-            theta = np.arccos(cos_theta)
-            if theta > MAX_OMEGA * dt:
-                axis = normalize(np.cross(old_dir, los))
-                delta = MAX_OMEGA * dt
-                new_dir = (old_dir * np.cos(delta) +
-                           np.cross(axis, old_dir) * np.sin(delta))
-                self._vel = new_dir * V
-            else:
-                self._vel = los * V
-
+        # # 3. 末段 5 g 限制转向真目标
+        # if self.locked:
+        #     tgt = self.scene.targets.pos()
+        #     los = normalize(tgt - self._pos)
+        #     old_dir = normalize(self._vel)
+        #     cos_theta = np.clip(old_dir @ los, -1, 1)
+        #     theta = np.arccos(cos_theta)
+        #     if theta > MAX_OMEGA * dt:
+        #         axis = normalize(np.cross(old_dir, los))
+        #         delta = MAX_OMEGA * dt
+        #         new_dir = (old_dir * np.cos(delta) +
+        #                    np.cross(axis, old_dir) * np.sin(delta))
+        #         self._vel = new_dir * V
+        #     else:
+        #         self._vel = los * V
+        #
         # 4. 积分 & 命中
         self._pos += self._vel * dt
-        if norm(self._pos - self.scene.targets[0].centre_bottom) <= KILL_RANGE:
+        if self._pos[2] <= 0:
             self.dead = True
 

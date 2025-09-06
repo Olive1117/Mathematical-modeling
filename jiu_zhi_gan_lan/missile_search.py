@@ -44,9 +44,9 @@ def missile_can_see_target(missile, cloud, target) -> bool:
     # 2. 生成所有边（底面、顶面、母线）
     edges = []
     for i in range(N):
-        j = (i + 1) % N
-        edges.append((bottom[i], bottom[j]))  # 底边
-        edges.append((top[i],    top[j]))     # 顶边
+        # j = (i + 1) % N
+        # edges.append((bottom[i], bottom[j]))  # 底边
+        # edges.append((top[i],    top[j]))     # 顶边
         edges.append((bottom[i], top[i]))     # 竖边
 
     # 3. 对每条边采样
