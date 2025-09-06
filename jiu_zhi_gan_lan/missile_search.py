@@ -57,15 +57,15 @@ def missile_can_see_target(missile, cloud, target) -> bool:
         """返回 True 表示射线 M_pos→p 与云盘相交"""
 
         """
-        公式
-        平面方程：n · (X − c) = 0 （两向量点乘为0）
-        射线方程：X(t) = o + t*d, t ≥ 0 （让动点X从起点o开始，沿d方向走t个单位）
-        联立平面方程和射线方程得
-        n · (o + t*d − c) = 0
-        -> n · (o − c) + t (n · d) = 0
-        -> t = − (n · (o − c)) / (n · d)
-        -> t = (n · (c − o)) / (n · d)
-        """
+         公式
+         平面方程：n · (X − c) = 0 （两向量点乘为0）
+         射线方程：X(t) = o + t*d, t ≥ 0 （让动点X从起点o开始，沿d方向走t个单位）
+         联立平面方程和射线方程得
+         n · (o + t*d − c) = 0
+         -> n · (o − c) + t (n · d) = 0
+         -> t = − (n · (o − c)) / (n · d)
+         -> t = (n · (c − o)) / (n · d)
+         """
         d = normalize(p - o)
         denom = n.dot(d)            # = n·d = |D| > 0
         if abs(denom) < 1e-8:       # 射线与平面平行，视为不相交

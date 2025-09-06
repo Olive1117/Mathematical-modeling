@@ -5,7 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5690fcbc-a8b2-4311-9707-a467ac278ae2" name="更改" comment="update">
+      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_B4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_B2.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_B2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_B3.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_B3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/missile_run_photo.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/missile_run_photo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/missile_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/missile_search.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/output/Q2_optimized_with_speed_check.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/output/Q2_optimized_with_speed_check.xlsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -34,6 +39,7 @@
     "Python.Q2_B.executor": "Run",
     "Python.Q2_B2.executor": "Run",
     "Python.Q2_B3.executor": "Run",
+    "Python.Q2_B4.executor": "Run",
     "Python.Q2_sim.executor": "Run",
     "Python.Q3_B3.executor": "Run",
     "Python.missile_run_photo.executor": "Run",
@@ -83,7 +89,15 @@
       <option name="project" value="LOCAL" />
       <updated>1757103435211</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="update">
+      <option name="closed" value="true" />
+      <created>1757103956529</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1757103956529</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">

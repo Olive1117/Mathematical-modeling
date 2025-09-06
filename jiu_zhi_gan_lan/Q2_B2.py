@@ -1,150 +1,268 @@
-#!/usr/bin/env python3
-# -*- coding: utf- -*-
-"""
-烟幕干扰弹投放策略 – 密度云遮蔽时长最大化
-A 题问题 2 示例（单弹单导弹）
-"""
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
-from tqdm import tqdm
-import os
+import matplotlib.pyplot as plt
+from scipy.optimize import differential_evolution
 
-# ---------------- 常量 -----------------
-G              = 9.8                    # m/s^2
-MISSILE_SPEED  = 300                    # m/s
-CLOUD_SINK     = 3.0                    # m/s
-CLOUD_R        = 10                     # m
-PLANE_SPEED_MIN, PLANE_SPEED_MAX = 70, 140
-PLANE_ALT      = 1800                   # FY1 初始高度
-M0             = np.array([20000, 0, 2000])  # M1 初始
-TARGET         = np.array([0, 200, 0])       # 真目标
-FY1_0          = np.array([17800, 0, PLANE_ALT])  # FY1 初始
+# 使用您第一问中的物理模型
+from core import Scene
+from drones import Drone
+from box_targets import BoxTarget
+from cloud import Cloud
+from missiles import *
 
-DT             = 0.1                    # 时间步长
-T_MAX          = np.linalg.norm(M0) / MISSILE_SPEED  # 最大飞行时间
 
-# ---------------- 工具函数 -----------------
-def missile_pos(t: float) -> np.ndarray:
-    """导弹直线飞向原点"""
-    dir_vec = -M0.astype(float)
-    dir_vec /= np.linalg.norm(dir_vec)
-    return M0 + MISSILE_SPEED * t * dir_vec
+class SmokeOptimizerV2:
+    def __init__(self):
+        self.scene = Scene()
+        self.setup_scene()
 
-def dist_point_to_line(p, a, b):
-    """点 p 到线段 ab 的距离"""
-    ab = b - a
-    ap = p - a
-    cross = np.cross(ap, ab)
-    return np.linalg.norm(cross) / (np.linalg.norm(ab) + 1e-12)
+    def setup_scene(self):
+        """设置场景"""
+        self.scene.targets.append(BoxTarget(0, self.scene))
 
-def shielding_duration(burst: np.ndarray) -> float:
-    """给定起爆点，返回对真目标的总遮蔽时长（秒）"""
-    total = 0.0
-    t = 0.0
-    while t <= T_MAX:
-        mt = missile_pos(t)
-        cloud = burst - np.array([0, 0, CLOUD_SINK * t])
-        if dist_point_to_line(cloud, mt, TARGET) <= CLOUD_R:
-            total += DT
-        t += DT
-    return total
+        # 导弹M1
+        self.m1 = Missile(0, np.array([20000, 0, 2000]), self.scene)
+        self.scene.missile.append(self.m1)
 
-# ---------------- 空间网格 -----------------
-def generate_grid(xrng, yrng, zrng):
-    """生成三维网格点（N,3）"""
-    xx, yy, zz = np.meshgrid(xrng, yrng, zrng, indexing='ij')
-    return np.stack([xx.ravel(), yy.ravel(), zz.ravel()], axis=1)
+        # 无人机FY1初始位置
+        self.fy1_start = np.array([17800.0, 0.0, 1800.0])
+        self.fake_pos = np.array([0.0, 0.0, 0.0])
 
-# 初筛：围绕导弹-目标走廊
-COARSE = generate_grid(
-    np.linspace(-600, 600, 25),
-    np.linspace(-200, 600, 25),
-    np.linspace(200, 1800, 30)
-)
+    def calculate_coverage(self, params):
+        """
+        计算遮蔽时间
+        params: [theta, v, t_drop, t_burst]
+        theta: 飞行方向角(弧度)
+        v: 飞行速度(m/s)
+        t_drop: 投放时间(s)
+        t_burst: 起爆时间(s)
+        """
+        theta, v, t_drop, t_burst = params
 
-# ---------------- 并行评估 -----------------
-print(">>> 粗网格评估中 ...")
-coarse_dur = Parallel(n_jobs=-1, backend='threading')(
-    delayed(shielding_duration)(p) for p in tqdm(COARSE, leave=False)
-)
-coarse_dur = np.array(coarse_dur)
-top10_idx = np.argsort(coarse_dur)[-10:][::-1]
-cand_points = COARSE[top10_idx]
+        # 重置场景
+        self.setup_scene()
 
-# 细网格 refine：在 top-1 附近 100 m 内加密
-best_coarse = cand_points[0]
-refine_rng = np.linspace(-50, 50, 11) + best_coarse[:, None]
-FINE = generate_grid(
-    refine_rng[0], refine_rng[1], refine_rng[2]
-)
+        # 计算飞行方向向量
+        direction = np.array([np.cos(theta), np.sin(theta), 0])
 
-print(">>> 细网格 refine ...")
-fine_dur = Parallel(n_jobs=-1, backend='threading')(
-    delayed(shielding_duration)(p) for p in tqdm(FINE, leave=False)
-)
-best_idx = np.argmax(fine_dur)
-BEST_BURST = FINE[best_idx]
-BEST_DUR = fine_dur[best_idx]
+        # 计算投放点位置
+        drop_pos = self.fy1_start.copy()
+        drop_pos[:2] += v * t_drop * direction[:2]
 
-print(f"最优遮蔽时长：{BEST_DUR:.2f} s")
-print(f"最优起爆点：{BEST_BURST}")
+        # 计算起爆点位置
+        v_hor = v * direction[:2]
+        delta_xy = v_hor * t_burst
+        delta_z = -0.5 * 9.8 * t_burst ** 2
+        bang_pos = np.array([
+            drop_pos[0] + delta_xy[0],
+            drop_pos[1] + delta_xy[1],
+            drop_pos[2] + delta_z
+        ])
 
-# ---------------- 反推无人机轨迹 -----------------
-def solve_plane_param(burst: np.ndarray):
-    """返回 (vx, vy, t_fly, t_b, deploy_point)"""
-    # 1. 起爆时间由自由落体决定
-    delta_z = PLANE_ALT - burst[2]
-    if delta_z < 0:
-        return None
-    t_b = np.sqrt(2 * delta_z / G)
+        # 创建烟幕云团
+        cloud = Cloud(1, bang_pos, self.scene)
+        self.scene.cloud.append(cloud)
 
-    # 2. 水平位移
-    dx, dy = burst[0] - FY1_0[0], burst[1] - FY1_0[1]
+        # 模拟整个过程
+        total_time = t_drop + t_burst + 25  # 投放+起爆+20秒遮蔽
+        dt = 0.01
+        t_current = 0.0
 
-    # 3. 无人机飞行时间 = 投放前飞行时间
-    #    投放点 D = FY1_0 + v * t_fly
-    #    起爆点 = D + v * t_b - 0.5*g*t_b^2 * z_hat
-    # => 水平：burst[0:2] = D[0:2] + v[0:2]*t_b
-    #         D[0:2] = FY1_0[0:2] + v[0:2]*t_fly
-    # =>  burst[0:2] = FY1_0[0:2] + v*(t_fly + t_b)
-    # =>  v = (burst[0:2] - FY1_0[0:2]) / (t_fly + t_b)
-    # 但 t_fly 未知，我们只需 |v| ∈ [70,140]
-    # 令 T = t_fly + t_b → v = dis / T
-    dis = np.linalg.norm([dx, dy])
-    T_min = dis / PLANE_SPEED_MAX
-    T_max = dis / PLANE_SPEED_MIN
-    # 任取 T ∈ [T_min, T_max] 即可，这里取中点
-    T = (T_min + T_max) / 2
-    v_vec = np.array([dx, dy]) / T
-    v_mag = np.linalg.norm(v_vec)
-    t_fly = T - t_b
-    deploy = FY1_0 + np.array([v_vec[0], v_vec[1], 0]) * t_fly
-    return (*v_vec, t_fly, t_b, deploy)
+        # 第一阶段：投放前
+        for _ in range(int(t_drop / dt)):
+            self.scene.step(t_current, dt)
+            t_current += dt
 
-sol = solve_plane_param(BEST_BURST)
-if sol is None:
-    raise ValueError("起爆点高于飞机高度！")
-vx, vy, t_fly, t_b, deploy = sol
+        # 第二阶段：投放后到起爆前
+        for _ in range(int(t_burst / dt)):
+            self.scene.step(t_current, dt)
+            t_current += dt
 
-print(f"无人机速度：(vx={vx:.2f}, vy={vy:.2f}) |v|={np.hypot(vx,vy):.2f} m/s")
-print(f"飞行时间：{t_fly:.2f} s，投放点：{deploy}")
+        # 第三阶段：起爆后20秒
+        for _ in range(int(20 / dt)):
+            self.scene.step(t_current, dt)
+            t_current += dt
 
-# ---------------- 输出 result1.xlsx -----------------
-out = pd.DataFrame([{
-    "无人机编号": "FY1",
-    "导弹编号": "M1",
-    "飞行速度(m/s)": np.hypot(vx, vy),
-    "飞行方向(°)": np.degrees(np.arctan2(vy, vx)) % 360,
-    "投放点X": deploy[0],
-    "投放点Y": deploy[1],
-    "投放点Z": deploy[2],
-    "起爆点X": BEST_BURST[0],
-    "起爆点Y": BEST_BURST[1],
-    "起爆点Z": BEST_BURST[2],
-    "起爆时间(s)": t_b,
-    "有效遮蔽时长(s)": BEST_DUR
-}])
-os.makedirs("output", exist_ok=True)
-out.to_excel("output/result1.xlsx", index=False)
-print(">>> 已保存 output/result1.xlsx")
+        # 获取遮蔽时间
+        coverage_time = self.m1.get_blocked_time()
+        return -coverage_time  # 返回负值用于最小化
+
+
+def optimize_with_de():
+    """使用差分进化算法进行优化"""
+    optimizer = SmokeOptimizerV2()
+
+    # 定义参数边界
+    bounds = [
+        (0, 2 * np.pi),  # theta: 0-2π
+        (70, 140),  # v: 70-140 m/s
+        (0, 10),  # t_drop: 0-10s
+        (0, 10)  # t_burst: 0-10s
+    ]
+
+    # 运行差分进化算法
+    result = differential_evolution(
+        optimizer.calculate_coverage,
+        bounds,
+        strategy='best1bin',
+        popsize=20,
+        maxiter=100,
+        tol=0.01,
+        mutation=(0.5, 1),
+        recombination=0.7,
+        seed=42
+    )
+
+    return result
+
+
+def optimize_with_sa():
+    """使用模拟退火算法进行优化"""
+    from scipy.optimize import dual_annealing
+
+    optimizer = SmokeOptimizerV2()
+
+    bounds = [
+        (0, 2 * np.pi),
+        (70, 140),
+        (0, 10),
+        (0, 10)
+    ]
+
+    result = dual_annealing(
+        optimizer.calculate_coverage,
+        bounds,
+        maxiter=200,
+        initial_temp=5230,
+        restart_temp_ratio=2e-5,
+        visit=2.62,
+        accept=-5.0,
+        seed=42
+    )
+
+    return result
+
+
+def main():
+    print("开始优化烟幕干扰弹投放策略（问题2）...")
+
+    # 方法1：差分进化算法
+    print("\n=== 使用差分进化算法优化 ===")
+    de_result = optimize_with_de()
+
+    print(f"最优参数: theta={np.degrees(de_result.x[0]):.2f}°, "
+          f"v={de_result.x[1]:.2f}m/s, "
+          f"t_drop={de_result.x[2]:.2f}s, "
+          f"t_burst={de_result.x[3]:.2f}s")
+    print(f"最大遮蔽时间: {-de_result.fun:.2f}s")
+
+    # 方法2：模拟退火算法（验证）
+    print("\n=== 使用模拟退火算法验证 ===")
+    sa_result = optimize_with_sa()
+
+    print(f"最优参数: theta={np.degrees(sa_result.x[0]):.2f}°, "
+          f"v={sa_result.x[1]:.2f}m/s, "
+          f"t_drop={sa_result.x[2]:.2f}s, "
+          f"t_burst={sa_result.x[3]:.2f}s")
+    print(f"最大遮蔽时间: {-sa_result.fun:.2f}s")
+
+    # 选择更好的结果
+    if -de_result.fun >= -sa_result.fun:
+        best_result = de_result
+        method = "差分进化算法"
+    else:
+        best_result = sa_result
+        method = "模拟退火算法"
+
+    print(f"\n=== 最优结果（{method}）===")
+    theta_deg = np.degrees(best_result.x[0])
+    v = best_result.x[1]
+    t_drop = best_result.x[2]
+    t_burst = best_result.x[3]
+    coverage_time = -best_result.fun
+
+    print(f"飞行方向角: {theta_deg:.2f}°")
+    print(f"飞行速度: {v:.2f} m/s")
+    print(f"投放时间: {t_drop:.2f} s")
+    print(f"起爆时间: {t_burst:.2f} s")
+    print(f"最大遮蔽时间: {coverage_time:.2f} s")
+
+    # 计算投放点和起爆点坐标
+    direction = np.array([np.cos(best_result.x[0]), np.sin(best_result.x[0]), 0])
+    drop_pos = np.array([17800.0, 0.0, 1800.0])
+    drop_pos[:2] += v * t_drop * direction[:2]
+
+    v_hor = v * direction[:2]
+    delta_xy = v_hor * t_burst
+    delta_z = -0.5 * 9.8 * t_burst ** 2
+    bang_pos = np.array([
+        drop_pos[0] + delta_xy[0],
+        drop_pos[1] + delta_xy[1],
+        drop_pos[2] + delta_z
+    ])
+
+    print(f"\n投放点坐标: ({drop_pos[0]:.2f}, {drop_pos[1]:.2f}, {drop_pos[2]:.2f}) m")
+    print(f"起爆点坐标: ({bang_pos[0]:.2f}, {bang_pos[1]:.2f}, {bang_pos[2]:.2f}) m")
+
+    # 保存结果
+    result_df = pd.DataFrame({
+        '参数': ['飞行方向角(度)', '飞行速度(m/s)', '投放时间(s)', '起爆时间(s)',
+                 '遮蔽时间(s)', '投放点X(m)', '投放点Y(m)', '投放点Z(m)',
+                 '起爆点X(m)', '起爆点Y(m)', '起爆点Z(m)'],
+        '数值': [theta_deg, v, t_drop, t_burst, coverage_time,
+                 drop_pos[0], drop_pos[1], drop_pos[2],
+                 bang_pos[0], bang_pos[1], bang_pos[2]]
+    })
+
+    result_df.to_excel('problem2_optimization_result.xlsx', index=False)
+    print("\n结果已保存到 problem2_optimization_result.xlsx")
+
+    # 可视化参数敏感性分析
+    visualize_sensitivity(best_result.x)
+
+
+def visualize_sensitivity(optimal_params):
+    """可视化参数敏感性"""
+    optimizer = SmokeOptimizerV2()
+    base_coverage = -optimizer.calculate_coverage(optimal_params)
+
+    variations = np.linspace(-0.2, 0.2, 9)  # ±20%的变化
+    param_names = ['飞行方向角', '飞行速度', '投放时间', '起爆时间']
+    param_units = ['°', 'm/s', 's', 's']
+
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    axes = axes.flatten()
+
+    for i, (ax, name, unit) in enumerate(zip(axes, param_names, param_units)):
+        sensitivities = []
+        test_params = optimal_params.copy()
+
+        for var in variations:
+            test_params[i] = optimal_params[i] * (1 + var)
+            if i == 0:  # 角度需要特殊处理
+                test_params[i] = test_params[i] % (2 * np.pi)
+
+            coverage = -optimizer.calculate_coverage(test_params)
+            sensitivities.append(coverage)
+
+        if i == 0:
+            x_values = np.degrees(optimal_params[i] * (1 + variations))
+        else:
+            x_values = optimal_params[i] * (1 + variations)
+
+        ax.plot(x_values, sensitivities, 'bo-', linewidth=2)
+        ax.axvline(x=optimal_params[i] if i != 0 else np.degrees(optimal_params[i]),
+                   color='r', linestyle='--', label='最优值')
+        ax.set_xlabel(f'{name} ({unit})')
+        ax.set_ylabel('遮蔽时间 (s)')
+        ax.set_title(f'{name}敏感性分析')
+        ax.grid(True)
+        ax.legend()
+
+    plt.tight_layout()
+    plt.savefig('parameter_sensitivity.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+if __name__ == "__main__":
+    main()
