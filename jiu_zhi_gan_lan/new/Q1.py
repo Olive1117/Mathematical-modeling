@@ -1,18 +1,7 @@
-import numpy as np
+from core import *
 
-from core import Scene
-from drones import Drone
-from box_targets import BoxTarget
-from cloud import Cloud
-from missiles import *
-
-scene = Scene()
-
-t = BoxTarget(0, scene)
-scene.targets = t
-
-m = Missile(0, np.array([20000, 0, 2000]), scene)
-scene.missile.append(m)
+from jiu_zhi_gan_lan.new.core import cloud_closure, target_true_pos
+from missile_search import validity_time
 
 # 已知参数
 fy1_pos = np.array([17800.0, 0.0, 1800.0])  # FY1初始位置 (m)
@@ -48,24 +37,9 @@ bang_pos = np.array([
     drop_pos[1] + delta_xy[1],
     drop_pos[2] + delta_z
 ])
-c = Cloud(1, bang_pos, scene)
-# 模拟运行
-t = 0.0
-dt = 0.001
-for _ in range(int(t_drop+t_bang)*1000):
-    scene.step(t, dt)
-    t += dt
-print("M1导弹当前位置：", scene.missile[0].pos())
-print("m1导弹有效被遮挡时长：", scene.missile[0].get_blocked_time())
-print("烟雾弹起爆点坐标 (m):", bang_pos)
-print(scene.missile[0].prev_blocked)
-scene.cloud.append(c)
-scene.missile[0].ir_on = True
-for _ in range(int(20)*1000):
-    print(scene.missile[0].prev_blocked)
-
-    scene.step(t, dt)
-    t += dt
-print("m1导弹有效被遮挡时长：", scene.missile[0].get_blocked_time())
-print("M1导弹当前位置：", scene.missile[0].pos())
-print("烟雾弹坐标 (m):", scene.cloud[0].pos())
+c1 = cloud_closure(bang_pos[0], bang_pos[1], bang_pos[2], 5.1)
+time = (validity_time(m1, target_true_pos, c1, 5.1))
+print(c1(5.1))
+print(time)
+c1(5.1)
+print()

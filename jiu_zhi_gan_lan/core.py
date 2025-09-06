@@ -29,7 +29,7 @@ class Scene:
         # entities数据结构 [[目标列表], [导弹列表], [无人机列表]]
         self.entities: List[Entity] = []
         self.log: List[dict] = []
-        self.targets: List[Entity] = []
+        self.targets: Entity = None
         self.missile: List[Entity] = []
         self.drone: List[Entity] = []
         self.cloud: List[Entity] = []
@@ -38,8 +38,7 @@ class Scene:
         self.entities.append(e)
 
     def step(self, t: float, dt: float):
-        for e in self.targets:
-            e.update(dt)
+        self.targets.update(dt)
         for e in self.missile:
             e.update(dt)
         for e in self.drone:
