@@ -71,6 +71,14 @@ def sliding_dwell_init(m_pos, fy_pos, corridor):
     Vm      = 300.0
     UM      = -m_pos[:2] / np.linalg.norm(m_pos[:2])
     UM_3_n  = -m_pos/np.linalg.norm(m_pos)
+    # thema = np.arctan(m_pos[2]/np.sqrt(m_pos[0]**2+m_pos[1]**2))
+    # aerfa = np.arctan(m_pos[1]/m_pos[0])
+    # 二维垂直方向（逆时针旋转90度）
+    UM_xy = UM_3_n[:2]
+    perp_dir = np.array([-UM_xy[1], UM_xy[0]])  # 垂直方向
+    perp_dir /= np.linalg.norm(perp_dir)  # 单位化
+    # 扩展10米：左右各5米
+    offset = 10.0 * perp_dir
     def dwell(x):
         theta, speed = x
         speed *= 10.0
@@ -78,17 +86,31 @@ def sliding_dwell_init(m_pos, fy_pos, corridor):
         dt   = 0.1
         t    = 0.0
         dwell= 0.0
-        # thema = np.arctan(m_pos[2]/np.sqrt(m_pos[0]**2+m_pos[1]**2))
-        # aerfa = np.arctan(m_pos[1]/m_pos[0])
-
         while t <= 70.0:
             pmin = m1(t)+cmin*UM_3_n
             pmax = m1(t)+cmax*UM_3_n
             pmin_xy = pmin[:2]
-            pmin_xy = pmin[:2]
-
-
-
+            pmax_xy = pmax[:2]
+            # 垂直方向扩10米 → 四个角点
+            corner1 = pmin_xy - offset
+            corner2 = pmin_xy + offset
+            corner3 = pmax_xy - offset
+            corner4 = pmax_xy + offset
+            # 接上段 corner1~corner4 计算之后
+            # 构造长方形的两条边
+            u_vec = pmax_xy - pmin_xy  # 沿走廊方向
+            v_vec = offset * 2  # 垂直方向，长度20m
+            # 待判断点：fy_pos 的当前投影（假设 fy 不动，若动则更新 fy_pos）
+            pt = fy_pos[:2]+dir_vec * speed * t
+            # 局部坐标系变换：以 corner1 为原点
+            rel = pt - corner1
+            # 投影到 u_vec 和 v_vec
+            u_len = np.dot(rel, u_vec) / np.dot(u_vec, u_vec)
+            v_len = np.dot(rel, v_vec) / np.dot(v_vec, v_vec)
+            # 判断是否在 [0,1]×[0,1] 范围内
+            if 0 <= u_len <= 1 and 0 <= v_len <= 1:
+                dwell += dt  # 在内部，累加停留时间
+            t += dt
         return -dwell          # 优化器要最小化
     return dwell
 objective_1 = sliding_dwell_init(m1_pos, fy1_pos, [0, 1500])
