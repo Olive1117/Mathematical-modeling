@@ -1,0 +1,1038 @@
+Index: jiu_zhi_gan_lan/new/Q2.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/new/Q2.py b/jiu_zhi_gan_lan/new/Q2.py
+new file mode 100644
+--- /dev/null	(date 1757100545961)
++++ b/jiu_zhi_gan_lan/new/Q2.py	(date 1757100545961)
+@@ -0,0 +1,127 @@
++from scipy.optimize import basinhopping, minimize
++from core import *
++from missile_search import validity_time
++"""
++Q1爆点为[17188, 0, 1736.496]
++以该爆点为退火起始点
++"""
++x = np.array([17188, 0, 1736.496, 5.1])
++def objective(x):
++    c1 = cloud_closure(x[0], x[1], x[2], x[3])
++    return -validity_time(m1, target_true_pos, c1, x[3])
++
++# ---------- 1. 生成邻域：各维度独立自适应步长 ----------
++def generate_neighbor(x, bounds, step_ratio):
++    """
++    step_ratio: 长度=dim 的数组，表示每一步对该维度区间宽度的比例
++    """
++    neighbor = x.copy()
++    dim = len(x)
++    idx = np.random.randint(dim)          # 随机挑一个维度动
++    width = bounds[idx][1] - bounds[idx][0]
++    delta = np.random.uniform(-1, 1) * step_ratio[idx] * width
++    neighbor[idx] += delta
++    neighbor[idx] = max(bounds[idx][0], min(neighbor[idx], bounds[idx][1]))
++    return neighbor
++
++# 模拟退火算法
++def simulated_annealing(objective_func, bounds, initial_temp, cooling_rate,
++                        max_iter, step_size, verbose=2):
++    dim = len(bounds)
++    # 初始比例：让第一步的「平均位移 ≈ 5 % 区间宽度」
++    initial_step_ratio = np.full(4, 0.05)  # 5 %，可自己调
++    current_step_ratio = initial_step_ratio.copy()
++    # 初始化当前解
++    current_solution = x
++    current_value = objective_func(current_solution)
++
++    # 初始化最优解
++    best_solution = current_solution.copy()
++    best_value = current_value
++
++    # 记录历史
++    current_temp = initial_temp
++    best_history = [best_value]
++    step_count = 0
++    accept_window = 0  # 最近 100 步的接受计数
++    history_accept = []  # 滑动窗口，记录最近 100 步是否接受
++
++    def log(header=False):
++        """打印一行日志"""
++        if header:
++            print("{:>6} {:>10} {:>12} {:>12} {:>8} {:>10}".format(
++                "iter", "temp", "current", "best", "acc_rate", "step_size"))
++            print("-" * 64)
++        else:
++            accept_rate = accept_window / max(1, len(history_accept))
++            print("{:>6} {:>10.2f} {:>12.4f} {:>12.4f} {:>7.1%} {:>10.2f} {}".format(
++                step_count, current_temp, current_value, best_value, accept_rate, current_step_ratio, current_solution))
++
++    if verbose >= 1:
++        log(header=True)
++
++    # 主循环
++    for i in range(max_iter):
++        step_count += 1
++        # 生成邻域解
++        # 在主循环里替换掉原来的 generate_neighbor 调用：
++        neighbor = generate_neighbor(current_solution, bounds, current_step_ratio)
++        neighbor_value = objective_func(neighbor)
++
++        # 计算能量差（目标函数差）
++        delta = neighbor_value - current_value
++
++        # 接受准则：如果更优则接受，否则以一定概率接受
++        if delta < 0 or np.random.rand() < np.exp(-delta / current_temp):
++            current_solution = neighbor.copy()
++            current_value = neighbor_value
++
++            # 更新最优解
++            if current_value < best_value:
++                best_solution = current_solution.copy()
++                best_value = current_value
++
++        # 降温
++        current_temp *= cooling_rate
++
++        # 记录历史
++        best_history.append(best_value)
++
++        # 每 100 步根据接受率再缩放一次
++        if i % 100 == 0 and i > 0:
++            accept_rate = accept_window / max(1, len(history_accept))
++            if accept_rate > 0.5:
++                current_step_ratio *= 1.2  # 接受太多，步子放大
++            elif accept_rate < 0.2:
++                current_step_ratio *= 0.8  # 接受太少，步子缩小
++            # 给每一步比例设上下限，防止爆炸或冻住
++            current_step_ratio = np.clip(current_step_ratio, 0.001, 0.3)
++
++        # 日志输出
++        if verbose == 2 or (verbose == 1 and i % 100 == 0):
++            log()
++
++    return best_solution, best_value, best_history
++
++
++# 参数设置
++bounds = [
++    (10000, 18000),  # x
++    (-200, 200),   # y
++    (0, 2000),    # z
++    (0, 50)          # t_blast
++]
++initial_temp = 100   # 初始温度
++cooling_rate = 0.98 # 冷却速率
++max_iter = 1000  # 最大迭代次数
++step_size = 150.0  # 初始步长
++
++# 运行模拟退火算法
++best_solution, best_value, best_history = simulated_annealing(
++    validity_time_array, bounds, initial_temp, cooling_rate, max_iter, step_size
++)
++# 输出结果
++print("模拟退火算法求解干扰时间最小化结果：")
++print(f"最优爆点参数：x={best_solution[0]:.2f}, y={best_solution[1]:.2f}, z={best_solution[2]:.2f}, t={best_solution[3]:.2f}")
++print(f"最小干扰时间：{best_value:.4f} 秒")
++print(validity_time_array(x))
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/missiles.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import numpy as np\r\nfrom core import Entity, Vec3, normalize, norm, Scene\r\nfrom missile_search import missile_can_see_target\r\n\r\n# ---------- 导弹 ----------\r\n\r\n# ---------- 常量 ----------\r\nV = 300.0  # 导弹常速 300 m/s\r\nMAX_G = 5.0  # 最大过载 5 g\r\ng = 9.81\r\nMAX_OMEGA = MAX_G * g / V  # 最大偏转角速度 (rad/s)\r\nIR_ON_RANGE = 6000.0  # 距假目标 6000 m 开启红外\r\nKILL_RANGE = 7.0  # 杀伤半径 7 m\r\n\r\n\r\nclass Missile(Entity):\r\n    __slots__ = (\"id\", \"_pos\", \"_vel\", \"scene\", \"ir_on\", \"locked\", \"dead\",\r\n                 \"blocked_timer\", \"prev_blocked\")\r\n\r\n    def __init__(self, id_: int, pos0: Vec3, scene: Scene):\r\n        self.id = id_\r\n        self._pos = pos0.astype(float).copy()\r\n        self._vel = normalize(-pos0) * V\r\n        self.scene = scene\r\n        self.ir_on = False\r\n        self.locked = False\r\n        self.dead = False\r\n        # >>> 新增：遮挡计时\r\n        self.blocked_timer = 0.0  # 累积被遮时长（s）\r\n        self.prev_blocked = False  # 上一帧是否被遮\r\n\r\n\r\n    def pos(self) -> Vec3:\r\n        return self._pos\r\n\r\n    # >>> 可选：外部读取被遮时长\r\n    def get_blocked_time(self) -> float:\r\n        return self.blocked_timer\r\n\r\n    def update(self, dt: float) -> None:\r\n        if self.dead:\r\n            return\r\n\r\n        # 1. 中段盲飞→6000 m 开启红外\r\n        if not self.ir_on:\r\n            fake_tgt = np.array([0.0, 0.0, 0.0])\r\n            if norm(self._pos - fake_tgt) <= IR_ON_RANGE:\r\n                self.ir_on = True\r\n            else:\r\n                self._vel = normalize(fake_tgt - self._pos) * V\r\n\r\n        # 2. 红外阶段：未锁定前持续探测 + 遮挡计时\r\n        if self.ir_on and not self.locked:\r\n            if not self.scene.cloud:  # ★ 新增：空列表直接认为“无云”\r\n                now_blocked = False\r\n            else:\r\n                cloud = self.scene.cloud[0]\r\n                target = self.scene.targets[0]\r\n                now_blocked = False if cloud is None else not missile_can_see_target(self, cloud, target)\r\n            # 累积计时\r\n            if now_blocked:\r\n                self.blocked_timer += dt\r\n            # 可选：刚进入/离开遮挡时可触发事件\r\n            self.prev_blocked = now_blocked\r\n\r\n            # # 发现目标（未被遮）→ 锁定\r\n            # if not now_blocked:\r\n            #     self.locked = True\r\n\r\n        # 3. 末段 5 g 限制转向真目标\r\n        if self.locked:\r\n            tgt = self.scene.targets[0].pos()\r\n            los = normalize(tgt - self._pos)\r\n            old_dir = normalize(self._vel)\r\n            cos_theta = np.clip(old_dir @ los, -1, 1)\r\n            theta = np.arccos(cos_theta)\r\n            if theta > MAX_OMEGA * dt:\r\n                axis = normalize(np.cross(old_dir, los))\r\n                delta = MAX_OMEGA * dt\r\n                new_dir = (old_dir * np.cos(delta) +\r\n                           np.cross(axis, old_dir) * np.sin(delta))\r\n                self._vel = new_dir * V\r\n            else:\r\n                self._vel = los * V\r\n\r\n        # 4. 积分 & 命中\r\n        self._pos += self._vel * dt\r\n        if norm(self._pos - self.scene.targets[0].centre_bottom) <= KILL_RANGE:\r\n            self.dead = True\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/missiles.py b/jiu_zhi_gan_lan/missiles.py
+--- a/jiu_zhi_gan_lan/missiles.py	(revision cd1125e709ec4fefc78d7c64e95e506de5722ae3)
++++ b/jiu_zhi_gan_lan/missiles.py	(date 1757097248470)
+@@ -20,9 +20,9 @@
+     def __init__(self, id_: int, pos0: Vec3, scene: Scene):
+         self.id = id_
+         self._pos = pos0.astype(float).copy()
+-        self._vel = normalize(-pos0) * V
++        self._vel = normalize(-pos0) * 300
+         self.scene = scene
+-        self.ir_on = False
++        self.ir_on = True
+         self.locked = False
+         self.dead = False
+         # >>> 新增：遮挡计时
+@@ -41,13 +41,13 @@
+         if self.dead:
+             return
+ 
+-        # 1. 中段盲飞→6000 m 开启红外
+-        if not self.ir_on:
+-            fake_tgt = np.array([0.0, 0.0, 0.0])
+-            if norm(self._pos - fake_tgt) <= IR_ON_RANGE:
+-                self.ir_on = True
+-            else:
+-                self._vel = normalize(fake_tgt - self._pos) * V
++        # # 1. 中段盲飞→6000 m 开启红外
++        # if not self.ir_on:
++        #     fake_tgt = np.array([0.0, 0.0, 0.0])
++        #     if norm(self._pos - fake_tgt) <= IR_ON_RANGE:
++        #         self.ir_on = True
++        #     else:
++        #         self._vel = normalize(fake_tgt - self._pos) * V
+ 
+         # 2. 红外阶段：未锁定前持续探测 + 遮挡计时
+         if self.ir_on and not self.locked:
+@@ -55,7 +55,7 @@
+                 now_blocked = False
+             else:
+                 cloud = self.scene.cloud[0]
+-                target = self.scene.targets[0]
++                target = self.scene.targets
+                 now_blocked = False if cloud is None else not missile_can_see_target(self, cloud, target)
+             # 累积计时
+             if now_blocked:
+@@ -67,24 +67,24 @@
+             # if not now_blocked:
+             #     self.locked = True
+ 
+-        # 3. 末段 5 g 限制转向真目标
+-        if self.locked:
+-            tgt = self.scene.targets[0].pos()
+-            los = normalize(tgt - self._pos)
+-            old_dir = normalize(self._vel)
+-            cos_theta = np.clip(old_dir @ los, -1, 1)
+-            theta = np.arccos(cos_theta)
+-            if theta > MAX_OMEGA * dt:
+-                axis = normalize(np.cross(old_dir, los))
+-                delta = MAX_OMEGA * dt
+-                new_dir = (old_dir * np.cos(delta) +
+-                           np.cross(axis, old_dir) * np.sin(delta))
+-                self._vel = new_dir * V
+-            else:
+-                self._vel = los * V
+-
++        # # 3. 末段 5 g 限制转向真目标
++        # if self.locked:
++        #     tgt = self.scene.targets.pos()
++        #     los = normalize(tgt - self._pos)
++        #     old_dir = normalize(self._vel)
++        #     cos_theta = np.clip(old_dir @ los, -1, 1)
++        #     theta = np.arccos(cos_theta)
++        #     if theta > MAX_OMEGA * dt:
++        #         axis = normalize(np.cross(old_dir, los))
++        #         delta = MAX_OMEGA * dt
++        #         new_dir = (old_dir * np.cos(delta) +
++        #                    np.cross(axis, old_dir) * np.sin(delta))
++        #         self._vel = new_dir * V
++        #     else:
++        #         self._vel = los * V
++        #
+         # 4. 积分 & 命中
+         self._pos += self._vel * dt
+-        if norm(self._pos - self.scene.targets[0].centre_bottom) <= KILL_RANGE:
++        if self._pos[2] <= 0:
+             self.dead = True
+ 
+Index: jiu_zhi_gan_lan/new/missile_search.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/new/missile_search.py b/jiu_zhi_gan_lan/new/missile_search.py
+new file mode 100644
+--- /dev/null	(date 1757097248531)
++++ b/jiu_zhi_gan_lan/new/missile_search.py	(date 1757097248531)
+@@ -0,0 +1,77 @@
++from core import *
++
++def validity_time(missile, target_pos, cloud, t_blast):
++    the_validity_time = 0.0
++    time_step = 0.01
++    start_time = 0
++    end_time = 20
++    current_time = start_time
++    m_pre_pos = missile(t_blast)
++    c_pre_pos = cloud(t_blast)
++
++    while current_time < end_time:
++        t_global = t_blast + current_time  # 全局时间往前跑
++        m_pos = missile(t_global)
++        c_pos = cloud(t_global)
++
++        # 计算点到直线单位向量
++        m_to_t = (target_pos - m_pos) / np.linalg.norm(target_pos - m_pos)
++
++        l = point_to_line_distance(c_pos, m_pos, m_to_t)
++        is_between = is_cloud_between(m_pos, c_pos, target_pos)
++        is_through = missile_intersect_smoke(m_pre_pos, m_pos, c_pre_pos, c_pos)
++        in_c = np.linalg.norm(m_pos - c_pos) <= 10
++        if (l <= 10 and is_between) or is_through or in_c:
++            the_validity_time += time_step
++        m_pre_pos = m_pos
++        c_pre_pos = c_pos
++        current_time += time_step
++    return the_validity_time
++
++def is_cloud_between(m_pos, c_pos, t_pos):
++    m_to_c = c_pos - m_pos
++    m_to_t = t_pos - m_pos
++    dot_cos_angle = np.dot(m_to_c, m_to_t) / (np.linalg.norm(m_to_c) * np.linalg.norm(m_to_t))
++    return dot_cos_angle > 0
++
++def point_to_line_distance(p, a, n):
++    w = p - a
++    return np.linalg.norm(np.cross(w, n)) / np.linalg.norm(n)
++
++def missile_intersect_smoke(
++        m_prev_pos,     # 导弹上一时刻位置
++        m_pos,          # 导弹当前位置
++        c_prev_pos,     # 烟幕上一时刻中心
++        c_pos,          # 烟幕当前中心
++):
++    """
++        判断导弹在当前时间步内是否穿过烟幕（球形）区域。
++        采用“相对运动+最近点投影”算法，兼顾效率与精度。
++        """
++    radius = 10
++    missile_move = m_pos - m_prev_pos
++    missile_move_length = np.linalg.norm(missile_move)
++    smoke_move = c_pos - c_prev_pos
++
++    relative_move = missile_move - smoke_move
++    relative_move_length = np.linalg.norm(relative_move)
++
++    if missile_move_length == 0:
++        return False
++    if relative_move_length == 0:
++        return np.linalg.norm(m_pos - c_pos) <= radius
++
++    relative_direction = relative_move / relative_move_length
++    c_to_m = m_prev_pos - c_prev_pos
++    projection = np.dot(c_to_m, relative_direction)
++    perpendicular_vec = c_to_m - projection * relative_direction
++    perpendicular_dist = np.linalg.norm(perpendicular_vec)
++
++    if perpendicular_dist <= radius and 0 <= projection <= relative_move_length:
++        return True
++    if np.linalg.norm(m_prev_pos - c_prev_pos) <= radius:
++        return True
++    if np.linalg.norm(m_pos - c_pos) <= radius:
++        return True
++
++    return False
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/missile_search.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import numpy as np\r\n\r\nfrom core import Vec3, normalize, norm\r\n# from box_targets import BoxTarget\r\n# from cloud import Cloud\r\n# from missiles import Missile\r\n\r\n# TODO 导弹视觉模拟已经写好了，需要的参数有导弹类的当前坐标，云团类的坐标半径，目标类的\r\n# ---------- 导弹视觉模拟 ----------\r\n\r\ndef missile_can_see_target(missile, cloud, target) -> bool:\r\n    \"\"\"\r\n    视锥判断：\r\n\r\n    1. 把圆柱表面离散成若干条线段；\r\n\r\n    2. 对线段上均匀采样的点，求“导弹→该点”的射线与云团圆盘的交点；\r\n\r\n    3. 若存在至少一个采样点不与云盘相交，则认为导弹能看见目标，立即返回 True；\r\n\r\n    4. 所有线段都被云盘“挡”住才返回 False。\r\n    \"\"\"\r\n\r\n    \"\"\"\r\n        返回射线与圆形平面的交点坐标，若无交点返回 None\r\n        o : 射线起点\r\n        d : 射线方向（已单位化）\r\n        c : 圆盘中心\r\n        r : 圆盘半径\r\n        n : 圆盘法向量（已单位化）\r\n    \"\"\"\r\n    o = missile.pos()\r\n    c = cloud.centre\r\n    r = cloud.radius\r\n    n = normalize(c - o)\r\n\r\n    # 1. 离散圆柱\r\n    N = 16\r\n    ang = np.linspace(0, 2*np.pi, N, endpoint=False)\r\n    dR  = np.stack([np.cos(ang), np.sin(ang), np.zeros(N)], axis=1)\r\n    bottom = target.centre_bottom + dR * target.radius\r\n    top    = bottom + np.array([0, 0, target.height])\r\n\r\n    # 2. 生成所有边（底面、顶面、母线）\r\n    edges = []\r\n    for i in range(N):\r\n        j = (i + 1) % N\r\n        edges.append((bottom[i], bottom[j]))  # 底边\r\n        edges.append((top[i],    top[j]))     # 顶边\r\n        edges.append((bottom[i], top[i]))     # 竖边\r\n\r\n    # 3. 对每条边采样\r\n    n_sample = 8                       # 每条边采样点数\r\n    ts = np.linspace(0, 1, n_sample)\r\n\r\n    def ray_hit_cloud(p: Vec3) -> bool:\r\n        \"\"\"返回 True 表示射线 M_pos→p 与云盘相交\"\"\"\r\n\r\n        \"\"\"\r\n        公式\r\n        平面方程：n · (X − c) = 0 （两向量点乘为0）\r\n        射线方程：X(t) = o + t*d, t ≥ 0 （让动点X从起点o开始，沿d方向走t个单位）\r\n        联立平面方程和射线方程得\r\n        n · (o + t*d − c) = 0\r\n        -> n · (o − c) + t (n · d) = 0\r\n        -> t = − (n · (o − c)) / (n · d)\r\n        -> t = (n · (c − o)) / (n · d)\r\n        \"\"\"\r\n        d = normalize(p - o)\r\n        denom = n.dot(d)            # = n·d = |D| > 0\r\n        if abs(denom) < 1e-8:       # 射线与平面平行，视为不相交\r\n            return False\r\n        t = n.dot(c - o) / denom    # 移动系数t\r\n        if t < 0:                   # 交点在射线反向延长线上\r\n            return False\r\n        x = o + t * d               # 复原交点x\r\n        # 判断交点是否在圆盘内\r\n        return norm(x - c) <= r\r\n\r\n    # 4. 逐线段检查\r\n    for A, B in edges:\r\n        for t in ts:\r\n            p = (1-t)*A + t*B\r\n            if not ray_hit_cloud(p):    # 只要有一个点不被云挡，就看见了\r\n                return True\r\n    return False
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/missile_search.py b/jiu_zhi_gan_lan/missile_search.py
+--- a/jiu_zhi_gan_lan/missile_search.py	(revision cd1125e709ec4fefc78d7c64e95e506de5722ae3)
++++ b/jiu_zhi_gan_lan/missile_search.py	(date 1757097248489)
+@@ -44,9 +44,9 @@
+     # 2. 生成所有边（底面、顶面、母线）
+     edges = []
+     for i in range(N):
+-        j = (i + 1) % N
+-        edges.append((bottom[i], bottom[j]))  # 底边
+-        edges.append((top[i],    top[j]))     # 顶边
++        # j = (i + 1) % N
++        # edges.append((bottom[i], bottom[j]))  # 底边
++        # edges.append((top[i],    top[j]))     # 顶边
+         edges.append((bottom[i], top[i]))     # 竖边
+ 
+     # 3. 对每条边采样
+Index: jiu_zhi_gan_lan/core.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from __future__ import annotations\r\nimport numpy as np\r\nimport pandas as pd\r\nfrom dataclasses import dataclass\r\nfrom typing import List, Tuple, Protocol\r\n\r\n# ---------- 基础向量工具 ----------\r\nVec3 = np.ndarray   # shape (3,)\r\n\r\n# 求向量长度\r\ndef norm(v: Vec3) -> float:\r\n    return float(np.linalg.norm(v))\r\n\r\n# 求单位向量\r\ndef normalize(v: Vec3) -> Vec3:\r\n    n = norm(v)\r\n    return v / n if n > 1e-8 else np.zeros(3)\r\n\r\n# ---------- 实体协议 ----------\r\nclass Entity(Protocol):\r\n    def update(self, dt: float): ...\r\n    def pos(self) -> Vec3: ...\r\n    def is_dead(self) -> bool: ...\r\n\r\n\r\n# ---------- 场景 ----------\r\nclass Scene:\r\n    def __init__(self):\r\n        # entities数据结构 [[目标列表], [导弹列表], [无人机列表]]\r\n        self.entities: List[Entity] = []\r\n        self.log: List[dict] = []\r\n        self.targets: List[Entity] = []\r\n        self.missile: List[Entity] = []\r\n        self.drone: List[Entity] = []\r\n        self.cloud: List[Entity] = []\r\n\r\n    def add(self, e: Entity):\r\n        self.entities.append(e)\r\n\r\n    def step(self, t: float, dt: float):\r\n        for e in self.targets:\r\n            e.update(dt)\r\n        for e in self.missile:\r\n            e.update(dt)\r\n        for e in self.drone:\r\n            e.update(dt)\r\n        for e in self.cloud:\r\n            e.update(dt)\r\n        # TODO 待修改，改成图表可以读取的格式\r\n        # 记录快照\r\n        self.log.append(\r\n            {\r\n                \"t\": t,\r\n                **{\r\n                    f\"{e.__class__.__name__}_{i}_x\": e.pos[0]\r\n                    for i, e in enumerate(self.entities)\r\n                },\r\n                **{\r\n                    f\"{e.__class__.__name__}_{i}_y\": e.pos[1]\r\n                    for i, e in enumerate(self.entities)\r\n                },\r\n                **{\r\n                    f\"{e.__class__.__name__}_{i}_z\": e.pos[2]\r\n                    for i, e in enumerate(self.entities)\r\n                },\r\n            }\r\n        )\r\n\r\n    def is_occluded(self, src: Vec3, dst: Vec3) -> bool:\r\n        \"\"\"视线段 src->dst 是否被任一 cloud 遮挡\"\"\"\r\n        seg = dst - src\r\n        seg_len = norm(seg)\r\n        if seg_len == 0:\r\n            return False\r\n        dir = seg / seg_len\r\n        for c in self.clouds:\r\n            # 球与线段最近距离\r\n            oc = c.centre - src\r\n            t = np.clip(oc.dot(dir), 0, seg_len)\r\n            closest = src + t * dir\r\n            if norm(closest - c.centre) <= c.radius:\r\n                return True\r\n        return False\r\n\r\n    def to_df(self) -> pd.DataFrame:\r\n        return pd.DataFrame(self.log)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/core.py b/jiu_zhi_gan_lan/core.py
+--- a/jiu_zhi_gan_lan/core.py	(revision cd1125e709ec4fefc78d7c64e95e506de5722ae3)
++++ b/jiu_zhi_gan_lan/core.py	(date 1757097248499)
+@@ -29,7 +29,7 @@
+         # entities数据结构 [[目标列表], [导弹列表], [无人机列表]]
+         self.entities: List[Entity] = []
+         self.log: List[dict] = []
+-        self.targets: List[Entity] = []
++        self.targets: Entity = None
+         self.missile: List[Entity] = []
+         self.drone: List[Entity] = []
+         self.cloud: List[Entity] = []
+@@ -38,8 +38,7 @@
+         self.entities.append(e)
+ 
+     def step(self, t: float, dt: float):
+-        for e in self.targets:
+-            e.update(dt)
++        self.targets.update(dt)
+         for e in self.missile:
+             e.update(dt)
+         for e in self.drone:
+Index: jiu_zhi_gan_lan/first_search.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/first_search.py b/jiu_zhi_gan_lan/first_search.py
+new file mode 100644
+--- /dev/null	(date 1757097248477)
++++ b/jiu_zhi_gan_lan/first_search.py	(date 1757097248477)
+@@ -0,0 +1,58 @@
++import numpy as np
++
++from Q2_1 import eval_block
++
++def find_best_burst_at_t(t: float,
++                         x0: float = 17188,
++                         y0: float = 0,
++                         z0: float = 1736,
++                         step: float = 1.0,):
++    """
++    单峰六邻域爬山：一轮无改进即认为到达峰值
++    返回: (best_x, best_y, best_z, best_time)
++    """
++    # 六个方向
++    dirs = np.array([[step, 0, 0], [-step, 0, 0],
++                     [0, step, 0], [0, -step, 0],
++                     [0, 0, step], [0, 0, -step]])
++
++    best_p = np.array([x0, y0, z0], dtype=float)
++    best_v = eval_block(*best_p, t)
++    print(f"[init]  t={t:.2f}s  p=[{best_p[0]:.2f} {best_p[1]:.2f} {best_p[2]:.2f}]  block={best_v:.3f}s")
++
++    while True:
++        for d in dirs:
++            new_p = best_p + d
++            v = eval_block(*new_p, t)
++            if v > best_v + 1e-6:  # 严格更好
++                best_p, best_v = new_p, v
++                print(f"[climb] t={t:.2f}s  p=[{best_p[0]:.2f} {best_p[1]:.2f} {best_p[2]:.2f}]  block={best_v:.3f}s")
++                break  # 立即重新扫六向
++        else:  # 六个方向都未能改进
++            break  # 到峰顶，直接退出
++    return *best_p, best_v
++
++def get_global_best_burst(t: float,
++                          x0: float = 17188,
++                          y0: float = 0,
++                          z0: float = 1736,
++                          steps: tuple = (100, 10, 1)):
++    """
++    给定起爆时刻 t，返回全局最优爆点坐标与最大遮蔽时长
++    返回: (best_x, best_y, best_z, best_time)
++    """
++    x, y, z = x0, y0, z0
++    for dt in steps:
++        x, y, z, tb = find_best_burst_at_t(t, x0=x, y0=y, z0=z, step=dt)
++    return x, y, z, tb
++
++# ------------------ demo ------------------
++if __name__ == "__main__":
++    t_fix = 5.1          # 你想优化的固定起爆时刻
++    steps = [10, 1, 0.1]  # 从大到小
++    x, y, z = 17188, 0, 1736  # 初值
++    for dt in steps:
++        x, y, z, tb = find_best_burst_at_t(t_fix, x0=x, y0=y, z0=z, step=dt)
++    print("\nFinal best burst:")
++    print(f"  pos = ({x:.1f}, {y:.1f}, {z:.1f}) m")
++    print(f"  block time = {tb:.3f} s")
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/search_time_axis.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/search_time_axis.py b/jiu_zhi_gan_lan/search_time_axis.py
+new file mode 100644
+--- /dev/null	(date 1757097248483)
++++ b/jiu_zhi_gan_lan/search_time_axis.py	(date 1757097248483)
+@@ -0,0 +1,42 @@
++# search_time_axis.py
++import numpy as np
++from first_search import get_global_best_burst, find_best_burst_at_t
++
++def search_time_axis(t_start: float, t_end: float, dt: float = 0.1, space_step: float = 1.0):
++    """
++    沿时间轴步进搜索最优爆点
++    参数:
++        t_start : 起始时刻（s）
++        t_end   : 终止时刻（s）
++        dt      : 时间步长，+0.1 表示正向，-0.1 表示反向
++        space_step : 每个时刻六邻域 refine 的空间步长
++        (x0,y0,z0) : 初始爆点坐标（t_start 时刻）
++    返回:
++        ans     : list，元素为 [t, x, y, z, block_time]
++    """
++    ans = []
++    # 用 t_start 的全局最优当 **初始爆点**
++    x, y, z, _ = get_global_best_burst(t_start)
++    t = t_start
++
++    # 决定循环方向
++    if dt > 0:
++        cond = lambda: t <= t_end
++    else:
++        cond = lambda: t >= t_end
++
++    while cond():
++        x, y, z, bt = find_best_burst_at_t(t, x, y, z, space_step)
++        ans.append([t, x, y, z, bt])
++        t += dt
++
++    return ans
++
++
++# ------------------ 简单测试 ------------------
++if __name__ == "__main__":
++    result = search_time_axis(5.1, 7, 0.1)   # 正向 5.1→6.0 s
++    # result = search_time_axis(5.1, 4.0, -0.1)  # 反向 5.1→4.0 s
++    for row in result:
++        t, x, y, z, bt = row
++        print(f"t={t:.1f}s  ({x:.1f},{y:.1f},{z:.1f})m  block={bt:.3f}s")
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/new/core.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/new/core.py b/jiu_zhi_gan_lan/new/core.py
+new file mode 100644
+--- /dev/null	(date 1757097248493)
++++ b/jiu_zhi_gan_lan/new/core.py	(date 1757097248493)
+@@ -0,0 +1,65 @@
++import numpy as np
++
++Vec3 = np.ndarray   # shape (3,)
++
++def normalize(v: Vec3) -> Vec3:
++    n = np.linalg.norm(v)
++    return v / n if n > 1e-8 else np.zeros(3)
++
++target_false_pos = np.array([0, 0, 0])
++target_true_pos = np.array([0, 200, 0])
++# 1. 离散圆柱
++N = 16
++ang = np.linspace(0, 2*np.pi, N, endpoint=False)
++dR  = np.stack([np.cos(ang), np.sin(ang), np.zeros(N)], axis=1)
++bottom = target_true_pos + dR * 7
++top    = bottom + np.array([0, 0, 10])
++# 2. 生成所有边（底面、顶面、母线）
++edges = []
++for i in range(N):
++    edges.append((bottom[i], top[i]))
++# 3. 对每条边采样
++n_sample = 8                       # 每条边采样点数
++ts = np.linspace(0, 1, n_sample)
++# 4. 逐线段检查
++sampling_point = []
++for A, B in edges:
++    for t in ts:
++        p = (1-t)*A + t*B
++        sampling_point.append(p)
++sampling_point = np.array(sampling_point)
++
++
++def missile_closure(x, y, z):
++    pos = np.array([x, y, z])
++    n = normalize(np.array([-x, -y, -z]))
++    v = 300
++    distance = np.linalg.norm(pos)
++    time_to_target = distance / v
++
++    def f(dt):
++        if dt < 0:
++            raise ValueError("时间不能为负数")
++        dt = min(dt, time_to_target)
++        return pos + n * v * dt
++    return f
++
++def cloud_closure(x, y, z, t):
++    pos = np.array([x, y, z])
++    n = np.array([0, 0, -1])
++    v = 3
++    duration = 20
++
++    def f(dt):
++        if dt > duration + t:
++            return None
++        if dt < t:
++            return pos
++        return pos + n * v * (dt - t)
++    return f
++
++m1 = missile_closure(20000, 0, 2000)
++m2 = missile_closure(19000, 600, 2100)
++m3 = missile_closure(18000, -600, 1900)
++
++# c1 = cloud_closure(17188, 0, 1736, 5.1)
+Index: jiu_zhi_gan_lan/new/Q1.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/new/Q1.py b/jiu_zhi_gan_lan/new/Q1.py
+new file mode 100644
+--- /dev/null	(date 1757097248504)
++++ b/jiu_zhi_gan_lan/new/Q1.py	(date 1757097248504)
+@@ -0,0 +1,43 @@
++from core import *
++
++from jiu_zhi_gan_lan.new.core import cloud_closure, target_true_pos
++from missile_search import validity_time
++
++# 已知参数
++fy1_pos = np.array([17800.0, 0.0, 1800.0])  # FY1初始位置 (m)
++fake_pos = np.array([0.0, 0.0, 0.0])        # 假目标位置 (m)
++v_fy = 120.0                                # FY1飞行速度 (m/s)
++t_drop = 1.5                                # 受领任务到投放的时间 (s)
++t_bang = 3.6                                # 投放到起爆的时间 (s)
++g = 9.8                                     # 重力加速度 (m/s^2)
++
++# 1. 计算FY1飞行方向单位向量
++direction = fake_pos - fy1_pos
++direction[2] = 0.0
++direction = direction / np.linalg.norm(direction)
++
++# 2. 计算投放点位置（z坐标不变）
++drop_pos = fy1_pos.copy()
++drop_pos[:2] += v_fy * t_drop * direction[:2]  # 仅更新x,y
++
++# 3. 计算起爆点位置
++# 水平速度向量（x, y 分量）
++v_hor = v_fy * direction[:2]
++# 初始垂直速度（z 分量）
++v_z0 = 0
++
++# 水平位移
++delta_xy = v_hor * t_bang
++# 垂直位移（向下为负）
++delta_z = v_z0 * t_bang - 0.5 * g * t_bang**2
++
++# 起爆点坐标
++bang_pos = np.array([
++    drop_pos[0] + delta_xy[0],
++    drop_pos[1] + delta_xy[1],
++    drop_pos[2] + delta_z
++])
++c1 = cloud_closure(bang_pos[0], bang_pos[1], bang_pos[2], 5.1)
++time = (validity_time(m1, target_true_pos, c1, 5.1))
++print(c1(5.1))
++print(time)
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"AutoImportSettings\">\r\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\r\n  </component>\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"5690fcbc-a8b2-4311-9707-a467ac278ae2\" name=\"更改\" comment=\"update\">\r\n      <change afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_B.py\" afterDir=\"false\" />\r\n      <change afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_B2.py\" afterDir=\"false\" />\r\n      <change afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_sim.py\" afterDir=\"false\" />\r\n      <change afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/result_q2.py\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_2.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_2.py\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/missile_run_photo.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/missile_run_photo.py\" afterDir=\"false\" />\r\n    </list>\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"FileTemplateManagerImpl\">\r\n    <option name=\"RECENT_TEMPLATES\">\r\n      <list>\r\n        <option value=\"Python Script\" />\r\n      </list>\r\n    </option>\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"ProjectLevelVcsManager\">\r\n    <ConfirmationsSetting value=\"2\" id=\"Add\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\"><![CDATA[{\r\n  \"keyToString\": {\r\n    \"Python.Q1.executor\": \"Run\",\r\n    \"Python.Q2_1.executor\": \"Run\",\r\n    \"Python.Q2_2.executor\": \"Run\",\r\n    \"Python.Q2_B.executor\": \"Run\",\r\n    \"Python.Q2_B2.executor\": \"Run\",\r\n    \"Python.Q2_B3.executor\": \"Run\",\r\n    \"Python.Q2_sim.executor\": \"Run\",\r\n    \"Python.missile_run_photo.executor\": \"Run\",\r\n    \"Python.result_q2.executor\": \"Run\",\r\n    \"git-widget-placeholder\": \"main\",\r\n    \"last_opened_file_path\": \"D:/math_model_contest/Mathematical-modeling/jiu_zhi_gan_lan\",\r\n    \"node.js.detected.package.eslint\": \"true\",\r\n    \"node.js.selected.package.eslint\": \"(autodetect)\",\r\n    \"node.js.selected.package.tslint\": \"(autodetect)\"\r\n  }\r\n}]]></component>\r\n  <component name=\"RecentsManager\">\r\n    <key name=\"CopyFile.RECENT_KEYS\">\r\n      <recent name=\"D:\\math_model_contest\\Mathematical-modeling\\jiu_zhi_gan_lan\" />\r\n    </key>\r\n  </component>\r\n  <component name=\"TaskManager\">\r\n    <task id=\"LOCAL-00001\" summary=\"update\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1757063090120</created>\r\n      <option name=\"number\" value=\"00001\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1757063090120</updated>\r\n    </task>\r\n    <option name=\"localTasksCounter\" value=\"2\" />\r\n    <servers />\r\n  </component>\r\n  <component name=\"VcsManagerConfiguration\">\r\n    <MESSAGE value=\"111\" />\r\n    <MESSAGE value=\"update\" />\r\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"update\" />\r\n  </component>\r\n  <component name=\"com.intellij.coverage.CoverageDataManagerImpl\">\r\n    <SUITE FILE_PATH=\"coverage/test_py$___.coverage\" NAME=\"分组柱状图、堆叠柱状图、百分比堆叠柱状图、直方图、核密度图、直方图 + 核密度图、箱线图、小提琴图、点图、基础饼图 覆盖结果\" MODIFIED=\"1756904019989\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码\" />\r\n    <SUITE FILE_PATH=\"coverage/test_py$Q2.coverage\" NAME=\"Q2 覆盖结果\" MODIFIED=\"1756903845025\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/python代码\" />\r\n    <SUITE FILE_PATH=\"coverage/test_py$_Y_3D_3D_.coverage\" NAME=\"双 Y 轴折线图、带填充区域的折线图、分组箱线图、3D 柱状图、3D 等高线图、误差棒图（横向）、矩阵散点图、堆叠面积图、带数据标签的柱状图、极坐标折线图 覆盖结果\" MODIFIED=\"1756904239704\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$Q1.coverage\" NAME=\"Q1 覆盖结果\" MODIFIED=\"1757063164500\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$Q2_2.coverage\" NAME=\"Q2_2 覆盖结果\" MODIFIED=\"1757063946205\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan\" />\r\n    <SUITE FILE_PATH=\"coverage/test_py$.coverage\" NAME=\"基础散点图、带趋势线的散点图、分组散点图、气泡图、基础折线图、多系列折线图、带误差线的折线图、阶梯折线图、基础柱状图、水平柱状图 覆盖结果\" MODIFIED=\"1756904072309\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$Q2_1.coverage\" NAME=\"Q2_1 覆盖结果\" MODIFIED=\"1757063157812\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan\" />\r\n    <SUITE FILE_PATH=\"coverage/test_py$BQ1.coverage\" NAME=\"BQ1 覆盖结果\" MODIFIED=\"1756826240487\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/python代码\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision cd1125e709ec4fefc78d7c64e95e506de5722ae3)
++++ b/.idea/workspace.xml	(date 1757106581548)
+@@ -5,13 +5,21 @@
+   </component>
+   <component name="ChangeListManager">
+     <list default="true" id="5690fcbc-a8b2-4311-9707-a467ac278ae2" name="更改" comment="update">
+-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_B.py" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_B2.py" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_sim.py" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/result_q2.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/first_search.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q1.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q2.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q2_1.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/core.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/missile_search.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/search_time_axis.py" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q1.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q1.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_1.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_1.py" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_2.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/Q2_2.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/missile_run_photo.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/missile_run_photo.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/assumptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/assumptions.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/core.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/missile_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/missile_search.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/missiles.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/missiles.py" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -34,26 +42,16 @@
+   <component name="PropertiesComponent"><![CDATA[{
+   "keyToString": {
+     "Python.Q1.executor": "Run",
++    "Python.Q2.executor": "Run",
+     "Python.Q2_1.executor": "Run",
+     "Python.Q2_2.executor": "Run",
+     "Python.Q2_B.executor": "Run",
+-    "Python.Q2_B2.executor": "Run",
+-    "Python.Q2_B3.executor": "Run",
+-    "Python.Q2_sim.executor": "Run",
+-    "Python.missile_run_photo.executor": "Run",
+-    "Python.result_q2.executor": "Run",
+     "git-widget-placeholder": "main",
+-    "last_opened_file_path": "D:/math_model_contest/Mathematical-modeling/jiu_zhi_gan_lan",
+     "node.js.detected.package.eslint": "true",
+     "node.js.selected.package.eslint": "(autodetect)",
+     "node.js.selected.package.tslint": "(autodetect)"
+   }
+ }]]></component>
+-  <component name="RecentsManager">
+-    <key name="CopyFile.RECENT_KEYS">
+-      <recent name="D:\math_model_contest\Mathematical-modeling\jiu_zhi_gan_lan" />
+-    </key>
+-  </component>
+   <component name="TaskManager">
+     <task id="LOCAL-00001" summary="update">
+       <option name="closed" value="true" />
+@@ -67,18 +65,25 @@
+     <servers />
+   </component>
+   <component name="VcsManagerConfiguration">
+-    <MESSAGE value="111" />
+     <MESSAGE value="update" />
+     <option name="LAST_COMMIT_MESSAGE" value="update" />
+   </component>
+   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+     <SUITE FILE_PATH="coverage/test_py$___.coverage" NAME="分组柱状图、堆叠柱状图、百分比堆叠柱状图、直方图、核密度图、直方图 + 核密度图、箱线图、小提琴图、点图、基础饼图 覆盖结果" MODIFIED="1756904019989" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
++    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q1.coverage" NAME="Q1 覆盖结果" MODIFIED="1757099442667" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
++    <SUITE FILE_PATH="coverage/Mathematical_modeling$missile_search.coverage" NAME="missile_search 覆盖结果" MODIFIED="1757092539887" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
++    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2.coverage" NAME="Q2 覆盖结果" MODIFIED="1757099980446" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
++    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2_2.coverage" NAME="Q2_2 覆盖结果" MODIFIED="1757102022009" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
++    <SUITE FILE_PATH="coverage/Mathematical_modeling$search_time_axis.coverage" NAME="search_time_axis 覆盖结果" MODIFIED="1757083937299" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
++    <SUITE FILE_PATH="coverage/Mathematical_modeling$simulated_annealing.coverage" NAME="simulated_annealing 覆盖结果" MODIFIED="1757096346341" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
++    <SUITE FILE_PATH="coverage/test_py$BQ1.coverage" NAME="BQ1 覆盖结果" MODIFIED="1756826240487" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python代码" />
++    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2_B.coverage" NAME="Q2_B 覆盖结果" MODIFIED="1757097409952" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
+     <SUITE FILE_PATH="coverage/test_py$Q2.coverage" NAME="Q2 覆盖结果" MODIFIED="1756903845025" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python代码" />
++    <SUITE FILE_PATH="coverage/Mathematical_modeling$missiles.coverage" NAME="missiles 覆盖结果" MODIFIED="1757073403583" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
+     <SUITE FILE_PATH="coverage/test_py$_Y_3D_3D_.coverage" NAME="双 Y 轴折线图、带填充区域的折线图、分组箱线图、3D 柱状图、3D 等高线图、误差棒图（横向）、矩阵散点图、堆叠面积图、带数据标签的柱状图、极坐标折线图 覆盖结果" MODIFIED="1756904239704" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
+-    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q1.coverage" NAME="Q1 覆盖结果" MODIFIED="1757063164500" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
+-    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2_2.coverage" NAME="Q2_2 覆盖结果" MODIFIED="1757063946205" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
++    <SUITE FILE_PATH="coverage/Mathematical_modeling$core.coverage" NAME="core 覆盖结果" MODIFIED="1757091966617" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
+     <SUITE FILE_PATH="coverage/test_py$.coverage" NAME="基础散点图、带趋势线的散点图、分组散点图、气泡图、基础折线图、多系列折线图、带误差线的折线图、阶梯折线图、基础柱状图、水平柱状图 覆盖结果" MODIFIED="1756904072309" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码" />
+-    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2_1.coverage" NAME="Q2_1 覆盖结果" MODIFIED="1757063157812" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
+-    <SUITE FILE_PATH="coverage/test_py$BQ1.coverage" NAME="BQ1 覆盖结果" MODIFIED="1756826240487" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python代码" />
++    <SUITE FILE_PATH="coverage/Mathematical_modeling$first_search.coverage" NAME="first_search 覆盖结果" MODIFIED="1757076672659" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan" />
++    <SUITE FILE_PATH="coverage/Mathematical_modeling$Q2_1.coverage" NAME="Q2_1 覆盖结果" MODIFIED="1757106412479" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/jiu_zhi_gan_lan/new" />
+   </component>
+ </project>
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/assumptions.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>\"\"\"\r\n推理\r\n\"\"\"\r\n\"\"\"\r\n假设1：导弹在距离真目标 ≤ 6 km 时启动红外成像制导\r\n假设2：目标需在红外导引头视场（±30°）内，且视线不被烟幕遮挡\r\n假设3：导弹存在最大载荷（5g），超过载荷会导致导弹解体\r\n假设4：导弹最末端具有红色危险范围，导弹一旦进入红色危险范围，即使发现真目标，也无法及时转向制导（≈1837m）\r\n\"\"\"\r\n\"\"\"\r\n推论1：结合假设1、2、3，烟雾覆盖范围应该为导弹距离假目标1837m~6000m，期间需烟雾覆盖时长≥13.88s，且连线\r\n\"\"\"\r\n\r\n\"\"\"\r\n实现1：将圆柱真目标离散化，以实现导弹视觉功能\r\n\"\"\"
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/assumptions.py b/jiu_zhi_gan_lan/assumptions.py
+--- a/jiu_zhi_gan_lan/assumptions.py	(revision cd1125e709ec4fefc78d7c64e95e506de5722ae3)
++++ b/jiu_zhi_gan_lan/assumptions.py	(date 1757097263181)
+@@ -13,4 +13,21 @@
+ 
+ """
+ 实现1：将圆柱真目标离散化，以实现导弹视觉功能
++"""
++"""
++导弹飞行时，一定存在一个特殊区域，
++在这个区域里一定有当前时间t的全局最优爆点解，
++且这个区域是连续的均匀的，以最优爆点最大有效覆盖时长向周围扩散，
++接近该特殊区域的边界有效覆盖时长逐渐降至0，在极短的时间dt内，
++该最优爆点最大有效覆盖时长是线性连续变化的，最优爆点位置一定在附近，
++最大有效覆盖时长一定连续变动
++
++所以只要找到一个初始有解的点，
++然后第一遍全局循环找到最优爆点解，
++接下来的连续dt时间里，只需要在当前点的附近重新作局部模拟，
++绝对能很快找到新的当前时间节点下的全局最优爆点
++
++T_eff(x, y, z, t)
++然后可以得到全局时间≈70s，取0.1s间隔，以t为自变量的离散的700个点
++然后拟合获得函数
+ """
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/Q2_1.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from box_targets import BoxTarget\r\nfrom cloud import Cloud\r\nfrom missiles import *\r\ndef eval_block(x, y, z, t):\r\n    \"\"\"\r\n    起爆点坐标 + 起爆时刻 → 有效遮挡时长（秒）\r\n    内部直接调你现成的 Scene，跑 20 s 云团寿命即可\r\n    \"\"\"\r\n    scene = Scene()\r\n    scene.targets.append(BoxTarget(0, scene))\r\n    m = Missile(0, np.array([20000, 0, 2000]), scene)\r\n    scene.missile.append(m)\r\n\r\n    # 开启导弹视觉\r\n    scene.missile[0].ir_on = True\r\n\r\n    print(\"烟雾弹起爆点坐标 (m):\", np.array([x, y, z]), \"时机\", t)\r\n    # 1. 把时间轴直接拨到起爆瞬间，导弹先插值到 t 时刻\r\n    dt = 0.1\r\n    for _ in range(int(t/dt)):\r\n        scene.step(t, dt)\r\n        t += dt\r\n    cloud = Cloud(1, np.array([x, y, z]), scene)\r\n    scene.cloud.append(cloud)\r\n    # 2. 跑完云团 20 s 寿命\r\n    dt = 0.01\r\n    for _ in range(int(20/dt)):\r\n        scene.step(t, dt)\r\n        t += dt\r\n    print(\"已经执行一次仿真，最大遮挡时长：\", scene.missile[0].get_blocked_time())\r\n    print(\"m1导弹有效被遮挡时长：\", scene.missile[0].get_blocked_time())\r\n    print(\"M1导弹当前位置：\", scene.missile[0].pos())\r\n    print(\"烟雾弹坐标 (m):\", scene.cloud[0].pos())\r\n    return scene.missile[0].get_blocked_time()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/Q2_1.py b/jiu_zhi_gan_lan/Q2_1.py
+--- a/jiu_zhi_gan_lan/Q2_1.py	(revision cd1125e709ec4fefc78d7c64e95e506de5722ae3)
++++ b/jiu_zhi_gan_lan/Q2_1.py	(date 1757097263187)
+@@ -3,32 +3,39 @@
+ from missiles import *
+ def eval_block(x, y, z, t):
+     """
+-    起爆点坐标 + 起爆时刻 → 有效遮挡时长（秒）
+-    内部直接调你现成的 Scene，跑 20 s 云团寿命即可
++    起爆点坐标 + 起爆时刻 → 遮挡比例（0~1）
++    云团寿命 20 s，但导弹落地就停算，返回遮挡比例
+     """
+     scene = Scene()
+-    scene.targets.append(BoxTarget(0, scene))
++    scene.targets = BoxTarget(0, scene)
+     m = Missile(0, np.array([20000, 0, 2000]), scene)
+     scene.missile.append(m)
++    m.ir_on = True
+ 
+-    # 开启导弹视觉
+-    scene.missile[0].ir_on = True
+-
+-    print("烟雾弹起爆点坐标 (m):", np.array([x, y, z]), "时机", t)
+-    # 1. 把时间轴直接拨到起爆瞬间，导弹先插值到 t 时刻
++    # 1. 先跑到 t
+     dt = 0.1
+-    for _ in range(int(t/dt)):
+-        scene.step(t, dt)
+-        t += dt
++    t_sim = 0.0
++    while t_sim < t:
++        scene.step(t_sim, dt)
++        t_sim += dt
++
++    # 2. 起爆
+     cloud = Cloud(1, np.array([x, y, z]), scene)
+     scene.cloud.append(cloud)
+-    # 2. 跑完云团 20 s 寿命
+-    dt = 0.01
+-    for _ in range(int(20/dt)):
+-        scene.step(t, dt)
+-        t += dt
+-    print("已经执行一次仿真，最大遮挡时长：", scene.missile[0].get_blocked_time())
+-    print("m1导弹有效被遮挡时长：", scene.missile[0].get_blocked_time())
+-    print("M1导弹当前位置：", scene.missile[0].pos())
+-    print("烟雾弹坐标 (m):", scene.cloud[0].pos())
+-    return scene.missile[0].get_blocked_time()
+\ No newline at end of file
++
++    # 3. 跑到导弹落地或 20 s 到期
++    cloud_lifetime = 20.0
++    while t_sim < t + cloud_lifetime:
++        print("m1导弹有效被遮挡时长：", scene.missile[0].get_blocked_time())
++        scene.step(t_sim, dt)
++        t_sim += dt
++
++    # print("已经执行一次仿真，最大遮挡时长：", scene.missile[0].get_blocked_time())
++    # print("m1导弹有效被遮挡时长：", scene.missile[0].get_blocked_time())
++    # print("M1导弹当前位置：", scene.missile[0].pos())
++    # print("烟雾弹坐标 (m):", scene.cloud[0].pos())
++    return m.get_blocked_time()
++    # total_possible = t_sim - t
++    # if total_possible <= 0:
++    #     return 0.0
++    # return m.get_blocked_time() / total_possible
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/Q1.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import numpy as np\r\n\r\nfrom core import Scene\r\nfrom drones import Drone\r\nfrom box_targets import BoxTarget\r\nfrom cloud import Cloud\r\nfrom missiles import *\r\n\r\nscene = Scene()\r\n\r\nt = BoxTarget(0, scene)\r\nscene.targets.append(t)\r\n\r\nm = Missile(0, np.array([20000, 0, 2000]), scene)\r\nscene.missile.append(m)\r\n\r\n# 已知参数\r\nfy1_pos = np.array([17800.0, 0.0, 1800.0])  # FY1初始位置 (m)\r\nfake_pos = np.array([0.0, 0.0, 0.0])        # 假目标位置 (m)\r\nv_fy = 120.0                                # FY1飞行速度 (m/s)\r\nt_drop = 1.5                                # 受领任务到投放的时间 (s)\r\nt_bang = 3.6                                # 投放到起爆的时间 (s)\r\ng = 9.8                                     # 重力加速度 (m/s^2)\r\n\r\n# 1. 计算FY1飞行方向单位向量\r\ndirection = fake_pos - fy1_pos\r\ndirection[2] = 0.0\r\ndirection = direction / np.linalg.norm(direction)\r\n\r\n# 2. 计算投放点位置（z坐标不变）\r\ndrop_pos = fy1_pos.copy()\r\ndrop_pos[:2] += v_fy * t_drop * direction[:2]  # 仅更新x,y\r\n\r\n# 3. 计算起爆点位置\r\n# 水平速度向量（x, y 分量）\r\nv_hor = v_fy * direction[:2]\r\n# 初始垂直速度（z 分量）\r\nv_z0 = 0\r\n\r\n# 水平位移\r\ndelta_xy = v_hor * t_bang\r\n# 垂直位移（向下为负）\r\ndelta_z = v_z0 * t_bang - 0.5 * g * t_bang**2\r\n\r\n# 起爆点坐标\r\nbang_pos = np.array([\r\n    drop_pos[0] + delta_xy[0],\r\n    drop_pos[1] + delta_xy[1],\r\n    drop_pos[2] + delta_z\r\n])\r\nc = Cloud(1, bang_pos, scene)\r\n# 模拟运行\r\nt = 0.0\r\ndt = 0.001\r\nfor _ in range(int(t_drop+t_bang)*1000):\r\n    scene.step(t, dt)\r\n    t += dt\r\nprint(\"M1导弹当前位置：\", scene.missile[0].pos())\r\nprint(\"m1导弹有效被遮挡时长：\", scene.missile[0].get_blocked_time())\r\nprint(\"烟雾弹起爆点坐标 (m):\", bang_pos)\r\nprint(scene.missile[0].prev_blocked)\r\nscene.cloud.append(c)\r\nscene.missile[0].ir_on = True\r\nfor _ in range(int(20)*1000):\r\n    print(scene.missile[0].prev_blocked)\r\n\r\n    scene.step(t, dt)\r\n    t += dt\r\nprint(\"m1导弹有效被遮挡时长：\", scene.missile[0].get_blocked_time())\r\nprint(\"M1导弹当前位置：\", scene.missile[0].pos())\r\nprint(\"烟雾弹坐标 (m):\", scene.cloud[0].pos())\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/Q1.py b/jiu_zhi_gan_lan/Q1.py
+--- a/jiu_zhi_gan_lan/Q1.py	(revision cd1125e709ec4fefc78d7c64e95e506de5722ae3)
++++ b/jiu_zhi_gan_lan/Q1.py	(date 1757097263193)
+@@ -9,7 +9,7 @@
+ scene = Scene()
+ 
+ t = BoxTarget(0, scene)
+-scene.targets.append(t)
++scene.targets = t
+ 
+ m = Missile(0, np.array([20000, 0, 2000]), scene)
+ scene.missile.append(m)
+Index: jiu_zhi_gan_lan/Q2_2.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from skopt import gp_minimize\r\n\r\nfrom Q2_1 import eval_block\r\n\r\n# 搜索空间：x y z t 四维\r\nspace = [\r\n    (16900, 17300),   # x  导弹航线附近 ±2 km\r\n    (-10, 10),    # y  左右 1 km\r\n    (1700, 1800),        # z  0~1500 m\r\n    (4.8, 5.3)           # t  0~80 s\r\n]\r\n\r\ndef obj(v):\r\n    x, y, z, t = v\r\n    print(\"x=\", x, \"y=\", y, \"z=\", z, \"t=\", t)\r\n    return -eval_block(x, y, z, t)   # 负号：skopt 求最小\r\n\r\nres = gp_minimize(obj, space, n_calls=40, random_state=0)\r\nx_opt, y_opt, z_opt, t_opt = res.x\r\nprint(\"最优爆点：x=%.1f y=%.1f z=%.1f t=%.2f s\" % (x_opt, y_opt, z_opt, t_opt))\r\nprint(\"最大遮挡时长：%.3f s\" % -res.fun)\r\n\r\n# eval_block(17188,0, 1736, 5.1)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/Q2_2.py b/jiu_zhi_gan_lan/Q2_2.py
+--- a/jiu_zhi_gan_lan/Q2_2.py	(revision cd1125e709ec4fefc78d7c64e95e506de5722ae3)
++++ b/jiu_zhi_gan_lan/Q2_2.py	(date 1757097295119)
+@@ -1,23 +1,34 @@
++import numpy as np
+ from skopt import gp_minimize
+ 
+ from Q2_1 import eval_block
+ 
+-# 搜索空间：x y z t 四维
+-space = [
+-    (16900, 17300),   # x  导弹航线附近 ±2 km
+-    (-10, 10),    # y  左右 1 km
+-    (1700, 1800),        # z  0~1500 m
+-    (4.8, 5.3)           # t  0~80 s
+-]
++n = 20
++while (n>0):
++    seed = np.random.default_rng().integers(0, 2 ** 31)  # 0~2 147 483 647
++
++    # 搜索空间：x y z t 四维
++    space = [
++        (16900.000, 17300.000),  # x  导弹航线附近 ±2 km
++        (-10.000, 10.000),  # y  左右 1 km
++        (1700.000, 1800.000),  # z  0~1500 m
++        (4.800, 5.300)  # t  0~80 s
++    ]
++
+ 
+-def obj(v):
+-    x, y, z, t = v
+-    print("x=", x, "y=", y, "z=", z, "t=", t)
+-    return -eval_block(x, y, z, t)   # 负号：skopt 求最小
++    def obj(v):
++        x, y, z, t = v
++        # print("x=", x, "y=", y, "z=", z, "t=", t)
++        return -eval_block(x, y, z, t)  # 负号：skopt 求最小
+ 
+-res = gp_minimize(obj, space, n_calls=40, random_state=0)
+-x_opt, y_opt, z_opt, t_opt = res.x
+-print("最优爆点：x=%.1f y=%.1f z=%.1f t=%.2f s" % (x_opt, y_opt, z_opt, t_opt))
+-print("最大遮挡时长：%.3f s" % -res.fun)
++    # 这行代码的作用是：
++    # 启动一个基于高斯过程的贝叶斯优化循环，在 4 维参数空间里最多做 40 次“爆炸-评估”实验，找到能让“有效遮挡时长”最长的 (x, y, z, t) 组合。
++    res = gp_minimize(obj, space, n_calls=40, random_state=seed)
++    x_opt, y_opt, z_opt, t_opt = res.x
++    print("当前第", n, "次仿真")
++    print("最优爆点：x=%.1f y=%.1f z=%.1f t=%.2f s" % (x_opt, y_opt, z_opt, t_opt))
++    print("本次全局最优遮挡时长：%.3f s" % -res.fun)
++    print("本次随机种子：", seed)
++    n -= 1
++
+ 
+-# eval_block(17188,0, 1736, 5.1)
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/new/Q2_1.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/new/Q2_1.py b/jiu_zhi_gan_lan/new/Q2_1.py
+new file mode 100644
+--- /dev/null	(date 1757106715764)
++++ b/jiu_zhi_gan_lan/new/Q2_1.py	(date 1757106715764)
+@@ -0,0 +1,122 @@
++import numpy as np
++from matplotlib import pyplot as plt
++from scipy.optimize import basinhopping, minimize
++from mpl_toolkits.mplot3d import Axes3D
++from matplotlib.ticker import MaxNLocator
++from core import *
++from missile_search import validity_time
++import random
++rand_seed = random.randint(0, 2**32 - 1)
++print('本次随机种子 =', rand_seed)
++np.random.seed(rand_seed)
++
++def objective(params):
++    """
++    带速度约束的 objective
++    如果 FY1 速度不在 [70,140] 之间，直接返回一个极大值
++    """
++    # 1. 先计算当前参数对应的投弹速度
++    x, y, z, t_0 = params[0]*10, params[1], params[2], params[3]
++    fy1        = np.array([17800, 0, 1800])
++    c_         = np.array([x, y, 1800])      # 保持你原来的假设
++    dist       = np.linalg.norm(c_ - fy1)
++    v          = dist / t_0                  # 飞行速度
++
++    # 2. 速度约束：不在 70–140 就罚
++    if v < 70 or v > 140:
++        return 1e2                        # 极大正数（basinhopping 会主动远离）
++
++    # 3. 原逻辑继续
++    c1 = cloud_closure(x, y, z, t_0)
++    return -validity_time(m1, target_true_pos, c1, t_0)
++
++class Optimization:
++    def __init__(self):
++        self.history = []
++        self.params_history = []
++        self.best_history = []
++        self.best_params_history = []
++        self.best_value = float('inf')
++        self.best_params = None
++
++    def __call__(self, x, f, accepted):
++        self.history.append(f)
++        self.params_history.append(x.copy())
++
++        if f < self.best_value:
++            self.best_value = f
++            self.best_params = x.copy()
++
++        self.best_history.append(self.best_value)
++        self.best_params_history.append(self.best_params.copy())
++
++        # if len(self.history) % 10 == 0:
++        print(f"Iteration: {len(self.history)}:Current value: {-f:.4f}, Best Value: {-self.best_value:.4f}")
++
++bounds =  [(0, 2000), (-600, 600), (0, 2000), (0, 70)]
++initial_params = np.array([1718.8, 0, 1736.496, 5.1])
++tracker = Optimization()
++
++print("开始模拟退火...")
++minimizer_kwargs = {
++    "method": "L-BFGS-B",
++    "bounds": bounds,
++    "options": {"maxiter": 100}
++}
++
++result_sa = basinhopping(
++    objective,
++    initial_params,
++    niter=200,
++    minimizer_kwargs=minimizer_kwargs,
++    stepsize=0.9,
++    accept_test=None,
++    callback=tracker,
++
++)
++
++best_params_sa = result_sa.x
++best_value_sa = -result_sa.fun
++
++print("\n 模拟退火优化结果")
++print(f"最佳坐标： ({best_params_sa[0]*10}, {best_params_sa[1]}, {best_params_sa[2]})")
++print(f"最佳引爆时间： {best_params_sa[3]}")
++print(f"最大有效遮蔽时间： {best_value_sa}")
++
++x = best_params_sa[0]*10
++y = best_params_sa[1]
++z = best_params_sa[2]
++c = np.array([x, y, z])
++fy1 = np.array([17800, 0, 1800])
++t_z = fy1[2] - z
++t_0 = best_params_sa[3]
++t_1 = np.sqrt(2*t_z/9.8)
++t_2 = t_0 - t_1
++c_ = np.array([c[0], c[1], 1800])
++fy1_to_c = c_ - fy1
++fy1_to_c_len = np.linalg.norm(fy1_to_c)
++v = fy1_to_c_len / t_0
++fy1_to_c_n = fy1_to_c / fy1_to_c_len
++toudandian = fy1 + fy1_to_c_n*t_2*v
++if (v > 140 or v < 70):
++    print("FT1来不及赶到投弹点！！！")
++print("FY1的飞行方向的单位向量为：", fy1_to_c_n)
++print("FY1的飞行速度为：", v)
++print("FY1的投弹点为：", toudandian)
++print("FY1的起爆点为：", c)
++
++x_norm = [(p[0] - bounds[0][0]) / (bounds[0][1] - bounds[0][0]) for p in tracker.params_history]
++y_norm = [(p[1] - bounds[1][0]) / (bounds[1][1] - bounds[1][0]) for p in tracker.params_history]
++z_norm = [(p[2] - bounds[2][0]) / (bounds[2][1] - bounds[2][0]) for p in tracker.params_history]
++t_norm = [(p[3] - bounds[3][0]) / (bounds[3][1] - bounds[3][0]) for p in tracker.params_history]
++plt.plot(x_norm, label='x')
++plt.plot(y_norm, label='y')
++plt.plot(z_norm, label='z')
++plt.plot(t_norm, label='t_det')
++plt.legend()
++plt.xlabel('迭代次数')
++plt.ylabel('归一化参数值')
++plt.title('参数优化过程')
++plt.legend()
++plt.grid(True, alpha=0.3)
++plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))

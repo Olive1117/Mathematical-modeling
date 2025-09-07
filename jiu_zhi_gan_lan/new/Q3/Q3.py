@@ -37,6 +37,70 @@ fy1_best_time_b3 = -1
 fy1_best_v_b3 = None
 fy1_best_p_b3 = None
 fy1_best_t_b3 = None
+#
+# for t in np.arange(0.1, 70, 0.1):
+#     fy1_init_v, fy1_init_p = terms(m1_pos, fy1_pos, t, 1300)
+#     if 70 <= fy1_init_v <= 140 and fy1_init_p[0] >= 0 and fy1_init_p[1] >= 0 and fy1_init_p[2] >= 0:
+#         fy1_init_v_list_b1.append(fy1_init_v)
+#         fy1_init_p_list_b1.append(fy1_init_p)
+#         fy1_init_t_list_b1.append(t)
+# for i in range(len(fy1_init_v_list_b1)):
+#     fy1_init_v = fy1_init_v_list_b1[i]
+#     fy1_init_p = fy1_init_p_list_b1[i]
+#     fy1_t_init = fy1_init_t_list_b1[i]
+#     c = cloud_closure(fy1_init_p[0], fy1_init_p[1], fy1_init_p[2], fy1_t_init)
+#     time_ = validity_time(m1, target_true_pos, c, fy1_t_init)
+#     if time_ > fy1_best_time_b1:
+#         fy1_best_time_b1 = time_
+#         fy1_best_v_b1 = fy1_init_v
+#         fy1_best_p_b1 = fy1_init_p
+#         fy1_best_t_b1 = fy1_t_init
+#     # print(time_)
+# print("fy1 to m1!", fy1_best_v_b1, fy1_best_p_b1, fy1_best_time_b1, fy1_best_t_b1)
+# fy1_init_v_list_b2 = []
+# fy1_init_p_list_b2 = []
+# fy1_init_t_list_b2 = []
+# for t in np.arange(0.1, 70, 0.1):
+#     fy1_init_v, fy1_init_p = terms(m1_pos, fy1_pos, t, 800)
+#     if 70 <= fy1_init_v <= 140 and fy1_init_p[0] >= 0 and fy1_init_p[1] >= 0 and fy1_init_p[2] >= 0:
+#         fy1_init_v_list_b2.append(fy1_init_v)
+#         fy1_init_p_list_b2.append(fy1_init_p)
+#         fy1_init_t_list_b2.append(t)
+# for i in range(len(fy1_init_v_list_b2)):
+#     fy1_init_v = fy1_init_v_list_b2[i]
+#     fy1_init_p = fy1_init_p_list_b2[i]
+#     fy1_t_init = fy1_init_t_list_b2[i]
+#     c = cloud_closure(fy1_init_p[0], fy1_init_p[1], fy1_init_p[2], fy1_t_init)
+#     time_ = validity_time(m1, target_true_pos, c, fy1_t_init)
+#     if time_ > fy1_best_time_b2:
+#         fy1_best_time_b2 = time_
+#         fy1_best_v_b2 = fy1_init_v
+#         fy1_best_p_b2 = fy1_init_p
+#         fy1_best_t_b2 = fy1_t_init
+#     # print(time)
+# print("fy1 to m1!", fy1_best_v_b2, fy1_best_p_b2, fy1_best_time_b2, fy1_best_t_b2)
+# fy1_init_v_list_b3 = []
+# fy1_init_p_list_b3 = []
+# fy1_init_t_list_b3 = []
+# for t in np.arange(0.1, 70, 0.1):
+#     fy1_init_v, fy1_init_p = terms(m1_pos, fy1_pos, t, 250)
+#     if 70 <= fy1_init_v <= 140 and fy1_init_p[0] >= 0 and fy1_init_p[1] >= 0 and fy1_init_p[2] >= 0:
+#         fy1_init_v_list_b3.append(fy1_init_v)
+#         fy1_init_p_list_b3.append(fy1_init_p)
+#         fy1_init_t_list_b3.append(t)
+# for i in range(len(fy1_init_v_list_b3)):
+#     fy1_init_v = fy1_init_v_list_b3[i]
+#     fy1_init_p = fy1_init_p_list_b3[i]
+#     fy1_t_init = fy1_init_t_list_b3[i]
+#     c = cloud_closure(fy1_init_p[0], fy1_init_p[1], fy1_init_p[2], fy1_t_init)
+#     time_ = validity_time(m1, target_true_pos, c, fy1_t_init)
+#     if time_ > fy1_best_time_b3:
+#         fy1_best_time_b3 = time_
+#         fy1_best_v_b3 = fy1_init_v
+#         fy1_best_p_b3 = fy1_init_p
+#         fy1_best_t_b3 = fy1_t_init
+#     # print(time)
+# print("fy1 to m1!", fy1_best_v_b3, fy1_best_p_b3, fy1_best_time_b3, fy1_best_t_b3)
 
 class Optimization:
     def __init__(self):
@@ -60,60 +124,56 @@ class Optimization:
 
         if len(self.history) % 100 == 0:
             print(f"Iteration: {len(self.history)}:Current value: {-f:.4f}, Best Value: {-self.best_value:.4f}{x}")
+# class ConstrainedRandomDisplacement(RandomDisplacement):
+#     def __init__(self, stepsize=0.5, bounds=None):
+#         super().__init__(stepsize)
+#         self.bounds = np.array(bounds)  # [(low1, high1), ...]
+#
+#     def __call__(self, x):
+#         # x 是 [t1, t2, t3]
+#         x_new = x.copy()
+#         x_new += self.rng.uniform(-self.stepsize, self.stepsize, size=x.shape)
+#
+#         # 投影到约束域：t2 - t1 >= 1, t3 - t2 >= 1
+#         t1, t2, t3, _, _, _ = x_new
+#         if t2 - t1 < 1.0:
+#             t2 = t1 + 1.0
+#         if t3 - t2 < 1.0:
+#             t3 = t2 + 1.0
+#         x_new = np.array([t1, t2, t3, x_new[3], x_new[4], x_new[5]])
+#
+#         return x_new
+
 
 def sliding_dwell_init(m_pos, fy_pos, corridor):
-    m_pos   = np.asarray(m_pos)
-    fy_pos  = np.asarray(fy_pos)
-    cmin, cmax = corridor
-    len_v   = cmax - cmin
-    len_u   = 20.0
-    eps     = 1e-3
-    Vm      = 300.0
-    UM      = -m_pos[:2] / np.linalg.norm(m_pos[:2])
-    UM_3_n  = -m_pos/np.linalg.norm(m_pos)
-    # thema = np.arctan(m_pos[2]/np.sqrt(m_pos[0]**2+m_pos[1]**2))
-    # aerfa = np.arctan(m_pos[1]/m_pos[0])
-    # 二维垂直方向（逆时针旋转90度）
-    UM_xy = UM_3_n[:2]
-    perp_dir = np.array([-UM_xy[1], UM_xy[0]])  # 垂直方向
-    perp_dir /= np.linalg.norm(perp_dir)  # 单位化
-    # 扩展10米：左右各5米
-    offset = 10.0 * perp_dir
-    def dwell(x):
-        theta, speed = x
-        speed *= 10.0
-        dir_vec      = np.array([np.cos(theta), np.sin(theta)])
-        dt   = 0.1
-        t    = 0.0
-        dwell= 0.0
-        while t <= 70.0:
-            pmin = m1(t)+cmin*UM_3_n
-            pmax = m1(t)+cmax*UM_3_n
-            pmin_xy = pmin[:2]
-            pmax_xy = pmax[:2]
-            # 垂直方向扩10米 → 四个角点
-            corner1 = pmin_xy - offset
-            corner2 = pmin_xy + offset
-            corner3 = pmax_xy - offset
-            corner4 = pmax_xy + offset
-            # 接上段 corner1~corner4 计算之后
-            # 构造长方形的两条边
-            u_vec = pmax_xy - pmin_xy  # 沿走廊方向
-            v_vec = offset * 2  # 垂直方向，长度20m
-            # 待判断点：fy_pos 的当前投影（假设 fy 不动，若动则更新 fy_pos）
-            pt = fy_pos[:2]+dir_vec * speed * t
-            # 局部坐标系变换：以 corner1 为原点
-            rel = pt - corner1
-            # 投影到 u_vec 和 v_vec
-            u_len = np.dot(rel, u_vec) / np.dot(u_vec, u_vec)
-            v_len = np.dot(rel, v_vec) / np.dot(v_vec, v_vec)
-            # 判断是否在 [0,1]×[0,1] 范围内
-            if 0 <= u_len <= 1 and 0 <= v_len <= 1:
-                dwell += dt  # 在内部，累加停留时间
+    m_pos_ = m_pos
+    fy_pos_ = fy_pos
+    corridor_ = corridor
+    def sliding_dwell(x):
+        """
+            返回无人机在滑动走廊 [300,1400] m 内的总停留时长（秒）
+            全程 torch 可微，theta 单位 rad，v 单位 m/s
+        """
+        theta, v = x
+        v = v*10
+        dir = np.array([np.cos(theta), np.sin(theta)])
+        dwell = 0.
+        t = 0.
+        dt = 0.01
+        m_pos = np.array([m_pos_[0], m_pos_[1]])
+        UM = -m_pos / np.linalg.norm(-m_pos)
+        while t <= 70:
+            p = np.array([fy_pos_[0], fy_pos_[1]]) + v * t * dir  # 无人机水平位置
+            m = np.array([m_pos[0], m_pos[1]]) + 300 * t * UM  # 导弹水平位置
+            xi = np.dot(p - m, UM)  # 导弹坐标系下的前向距离
+            inside = (xi >= corridor_[0]) & (xi <= corridor_[1])
+            dwell = dwell + (dt if inside else 0.)
             t += dt
-        return -dwell          # 优化器要最小化
-    return dwell
-objective_1 = sliding_dwell_init(m1_pos, fy1_pos, [0, 1500])
+            # print(t, xi.item(), inside.item())
+        return -dwell
+    return sliding_dwell
+
+objective_1 = sliding_dwell_init(m1_pos, fy1_pos, [300, 1400])
 # step_size = ConstrainedRandomDisplacement(stepsize=0.5)
 tracker_1 = Optimization()
 bounds_1 = [(0, 2*np.pi), (70/10, 140/10)]
@@ -480,6 +540,41 @@ bom2 = np.array([avo, v ,rt1+rt2, bt2])
 bom3 = np.array([avo, v ,rt1+rt2+rt3, bt3])
 print(bom1)
 pos_release, pos_detonate, time11 = objective_user(bom1)
+# M = np.linalg.norm(pos_detonate - m1(best_params_sa[3]))
+print("\n 模拟退火优化结果bom1")
+print(f"最佳转向角：{avo}")
+print(f"最佳速度：{v}")
+print(f"最佳投弹时间：{best_params_sa[0]}")
+print(f"最佳投弹点：{pos_release}")
+print(f"最佳引爆时间：{best_params_sa[3]}")
+print(f"最佳引爆点：{pos_detonate}")
+print(f"最大有效遮蔽时间： {time11}")
+# print(f"爆时烟雾与导弹距离：{M}")
+# ji = objective_user_set(best_params_sa)
+
+print(bom2)
+pos_release, pos_detonate, time22 = objective_user(bom2)
+print("\n 模拟退火优化结果bom2")
+print(f"最佳转向角：{avo}")
+print(f"最佳速度：{v}")
+print(f"最佳投弹时间：{best_params_sa[1]}")
+print(f"最佳投弹点：{pos_release}")
+print(f"最佳引爆时间：{best_params_sa[4]}")
+print(f"最佳引爆点：{pos_detonate}")
+print(f"最大有效遮蔽时间： {time22}")
+
+print(bom3)
+pos_release, pos_detonate, time33 = objective_user(bom3)
+print("\n 模拟退火优化结果bom3")
+print(f"最佳转向角：{avo}")
+print(f"最佳速度：{v}")
+print(f"最佳投弹时间：{best_params_sa[2]}")
+print(f"最佳投弹点：{pos_release}")
+print(f"最佳引爆时间：{best_params_sa[5]}")
+print(f"最佳引爆点：{pos_detonate}")
+print(f"最大有效遮蔽时间： {time33}")
+print(f"最大总有效遮蔽时间： {best_value_sa}")
+
 
 print("————————————————————————————————————")
 print(bom1)
