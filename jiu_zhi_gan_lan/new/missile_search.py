@@ -2,7 +2,7 @@ from core import *
 
 def validity_time(missile, target_pos, cloud, t_blast):
     the_validity_time = 0.0
-    time_step = 0.01
+    time_step = 0.1
     start_time = 0
     end_time = 20
     current_time = start_time
@@ -27,10 +27,38 @@ def validity_time(missile, target_pos, cloud, t_blast):
         c_pre_pos = c_pos
         current_time += time_step
     return the_validity_time
+def validity_time_set(missile, target_pos, cloud, t_blast):
+    the_validity_time = set()
+    time_step = 0.1
+    start_time = 0
+    end_time = 20
+    current_time = start_time
+    m_pre_pos = missile(t_blast)
+    c_pre_pos = cloud(t_blast)
 
+    while current_time < end_time:
+        t_global = t_blast + current_time  # 全局时间往前跑
+        m_pos = missile(t_global)
+        c_pos = cloud(t_global)
+
+        # 计算点到直线单位向量
+        m_to_t = (target_pos - m_pos) / np.linalg.norm(target_pos - m_pos)
+
+        l = point_to_line_distance(c_pos, m_pos, m_to_t)
+        is_between = is_cloud_between(m_pos, c_pos, target_pos)
+        is_through = missile_intersect_smoke(m_pre_pos, m_pos, c_pre_pos, c_pos)
+        in_c = np.linalg.norm(m_pos - c_pos) <= 10
+        if (l <= 10 and is_between) or is_through or in_c:
+            the_validity_time.add(round(t_global, 1))
+        m_pre_pos = m_pos
+        c_pre_pos = c_pos
+        current_time += time_step
+    return the_validity_time
 def is_cloud_between(m_pos, c_pos, t_pos):
     m_to_c = c_pos - m_pos
     m_to_t = t_pos - m_pos
+    if np.linalg.norm(m_to_c) == 0 or np.linalg.norm(m_to_t) == 0:
+        return None
     dot_cos_angle = np.dot(m_to_c, m_to_t) / (np.linalg.norm(m_to_c) * np.linalg.norm(m_to_t))
     return dot_cos_angle > 0
 

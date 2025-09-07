@@ -124,7 +124,7 @@ minimizer_kwargs = {
 result_sa = basinhopping(
     objective,
     initial_params,
-    niter=50,
+    niter=100,
     minimizer_kwargs=minimizer_kwargs,
     stepsize=0.5,
     accept_test=None,
@@ -161,14 +161,16 @@ plt.legend()
 plt.grid(True, alpha=0.3)
 plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
 plt.show()
+
 plt.figure()
-plt.subplot(1, 3, 3)
+# plt.subplot(1, 3, 3)
 initial_value = -objective(initial_params) / 100
 plt.bar(['初始参数', '优化后参数'], [initial_value, best_value_sa], alpha=0.7)
 plt.ylabel('有效遮蔽时间(s)')
+plt.ylim(bottom=initial_value-2)
 plt.title('优化前后对比')
 plt.grid(True, alpha=0.3)
 for i, v, in enumerate([initial_value, best_value_sa]):
-    plt.text(i, v +0.3, f'{v:.2f}s', ha='center', va='bottom')
+    plt.text(i, v +0.05, f'{v:.2f}s', ha='center', va='bottom')
 plt.tight_layout()
 plt.show()
