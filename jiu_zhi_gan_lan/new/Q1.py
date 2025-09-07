@@ -1,7 +1,7 @@
 from core import *
 
 from jiu_zhi_gan_lan.new.core import cloud_closure, target_true_pos
-from missile_search import validity_time
+from missile_search import validity_time, validity_time_set
 
 # 已知参数
 fy1_pos = np.array([17800.0, 0.0, 1800.0])  # FY1初始位置 (m)
@@ -38,8 +38,16 @@ bang_pos = np.array([
     drop_pos[2] + delta_z
 ])
 c1 = cloud_closure(bang_pos[0], bang_pos[1], bang_pos[2], 5.1)
+print(m1, target_true_pos, c1, 5.1)
 time = (validity_time(m1, target_true_pos, c1, 5.1))
+c1 = cloud_closure(bang_pos[0], bang_pos[1], bang_pos[2], 5.3)
+time1 = (validity_time_set(m1, target_true_pos, c1, 5.3))
+c1 = cloud_closure(bang_pos[0], bang_pos[1], bang_pos[2], 5.5)
+time2 = (validity_time_set(m1, target_true_pos, c1, 5.5))
 print(c1(5.1))
 print(time)
+print(time1)
+print(time2)
+print(time1|time2)
 c1(5.1)
 print()

@@ -52,8 +52,8 @@ def angle_to_unit_vector(a, deg=False):
     if deg:
         a = np.deg2rad(a)
 
-    # 基准向量：−x 轴
-    base = np.array([-1.0, 0.0, 0.0])
+    # 基准向量：x 轴
+    base = np.array([1.0, 0.0, 0.0])
 
     # 绕 z 轴旋转矩阵（右手系，顺时针即负角度）
     cos = np.cos(-a)
@@ -97,8 +97,8 @@ while a:
                 print(f"Iteration: {len(self.history)}:Current value: {-f:.4f}, Best Value: {-self.best_value:.4f}{x}")
 
 
-    bounds = [(-1*10, 1*10), (70, 140), (0, 50), (0, 50)]
-    initial_params = np.array([0, 120, 15, 36])
+    bounds = [(5*10, 7*10), (70, 140), (0, 50), (0, 50)]
+    initial_params = np.array([60, 120, 15, 36])
     tracker = Optimization()
 
     print("开始模拟退火...")
@@ -131,7 +131,7 @@ while a:
     print(f"最佳引爆点：{pos_detonate}")
     print(f"最大有效遮蔽时间： {best_value_sa}")
     print(f"爆时烟雾与导弹距离：{M}")
-
+    plt.figure()
     a_norm = [(p[0] - bounds[0][0]) / (bounds[0][1] - bounds[0][0]) for p in tracker.params_history]
     v_norm = [(p[1] - bounds[1][0]) / (bounds[1][1] - bounds[1][0]) for p in tracker.params_history]
     t_release_norm = [(p[2] - bounds[2][0]) / (bounds[2][1] - bounds[2][0]) for p in tracker.params_history]
@@ -148,7 +148,19 @@ while a:
     plt.grid(True, alpha=0.3)
     plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.show()
-    best_time = 0
+
+    plt.figure()
+    # plt.subplot(1, 3, 3)
+    initial_value = -objective(initial_params) / 100
+    plt.bar(['初始参数', '优化后参数'], [initial_value, best_value_sa], alpha=0.7)
+    plt.ylabel('有效遮蔽时间(s)')
+    plt.ylim(bottom=initial_value - 2)
+    plt.title('优化前后对比')
+    plt.grid(True, alpha=0.3)
+    for i, v, in enumerate([initial_value, best_value_sa]):
+        plt.text(i, v + 0.05, f'{v:.2f}s', ha='center', va='bottom')
+    plt.tight_layout()
+    plt.show()
     if (best_value_sa > best_time):
         best_time = best_value_sa
         best_seed = rand_seed

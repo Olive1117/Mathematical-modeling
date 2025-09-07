@@ -3,7 +3,7 @@ from missile_search import validity_time
 from matplotlib import pyplot as plt
 from scipy.optimize import basinhopping, minimize
 import random
-from Q4_2 import *
+# from Q4_2 import *
 import numpy as np
 from matplotlib.ticker import MaxNLocator
 # 最简化的字体设置，确保兼容性
@@ -14,6 +14,8 @@ plt.rcParams["axes.unicode_minus"] = False  # 解决负号显示问题
 plt.rcParams["figure.figsize"] = (8, 5)
 plt.rcParams["figure.dpi"] = 80
 plt.rcParams["font.size"] = 12
+
+fy1_pos = np.array([17800, 0, 1800])
 
 def objective(params):
     a, v, t_release, t_detonate = params
@@ -107,9 +109,10 @@ class Optimization:
         if len(self.history) % 1 == 0:
             print(f"Iteration: {len(self.history)}:Current value: {-f:.4f}, Best Value: {-self.best_value:.4f}{x}")
 
-angle = angle_to_unit_vector(fy1_best_p, fy1_pos)
-t_release, t_detonate = flat_projectile_time(fy1_best_p, fy1_pos, fy1_best_t)
-print([angle, fy1_best_v, t_release, t_detonate])
+angle = angle_to_unit_vector([17188,        0,     1736.496], fy1_pos)
+t_release, t_detonate = flat_projectile_time([17188,        0,     1736.496], fy1_pos, 5.1)
+fy1_best_v = np.linalg.norm(np.array([17188, 0]) - np.array([17800, 0]))/5.1
+# print([angle, fy1_best_v, t_release, t_detonate])
 bounds = [(0, 2*np.pi * 10), (70, 140), (0, 50), (0, 50)]
 initial_params = np.array([angle*10, fy1_best_v, t_release*10, t_detonate*10])
 tracker = Optimization()
@@ -124,7 +127,7 @@ minimizer_kwargs = {
 result_sa = basinhopping(
     objective,
     initial_params,
-    niter=50,
+    niter=1000,
     minimizer_kwargs=minimizer_kwargs,
     stepsize=0.5,
     accept_test=None,
@@ -134,13 +137,13 @@ result_sa = basinhopping(
 best_params_sa = result_sa.x
 best_value_sa = -result_sa.fun / 100
 pos_release, pos_detonate, time = objective_user(best_params_sa)
-M = np.linalg.norm(pos_detonate - m1(best_params_sa[3]))
+M = np.linalg.norm(pos_detonate - m1(best_params_sa[3]/10))
 print("\n 模拟退火优化结果")
-print(f"最佳转向角：{best_params_sa[0] * np.pi / 6 / 10}")
+print(f"最佳转向角：{best_params_sa[0]/ 10}")
 print(f"最佳速度：{best_params_sa[1]}")
-print(f"最佳投弹时间：{best_params_sa[2]}")
+print(f"最佳投弹时间：{best_params_sa[2]/10}")
 print(f"最佳投弹点：{pos_release}")
-print(f"最佳引爆时间：{best_params_sa[3]}")
+print(f"最佳引爆时间：{best_params_sa[3]/10}")
 print(f"最佳引爆点：{pos_detonate}")
 print(f"最大有效遮蔽时间： {best_value_sa}")
 print(f"爆时烟雾与导弹距离：{M}")
@@ -161,14 +164,16 @@ plt.legend()
 plt.grid(True, alpha=0.3)
 plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
 plt.show()
+
 plt.figure()
-plt.subplot(1, 3, 3)
+# plt.subplot(1, 3, 3)
 initial_value = -objective(initial_params) / 100
 plt.bar(['初始参数', '优化后参数'], [initial_value, best_value_sa], alpha=0.7)
 plt.ylabel('有效遮蔽时间(s)')
+plt.ylim(bottom=initial_value-2)
 plt.title('优化前后对比')
 plt.grid(True, alpha=0.3)
 for i, v, in enumerate([initial_value, best_value_sa]):
-    plt.text(i, v +0.3, f'{v:.2f}s', ha='center', va='bottom')
+    plt.text(i, v +0.05, f'{v:.2f}s', ha='center', va='bottom')
 plt.tight_layout()
 plt.show()

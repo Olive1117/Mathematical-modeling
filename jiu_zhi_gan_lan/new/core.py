@@ -61,5 +61,5 @@ def cloud_closure(x, y, z, t):
 m1 = missile_closure(20000, 0, 2000)
 m2 = missile_closure(19000, 600, 2100)
 m3 = missile_closure(18000, -600, 1900)
-
+# print(m1(0))
 # c1 = cloud_closure(17188, 0, 1736, 5.1)
