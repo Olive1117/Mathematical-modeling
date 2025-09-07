@@ -16,19 +16,19 @@ fy3_init_v_list = []
 fy3_init_p_list = []
 fy3_t_init_list = []
 for t in np.arange(0.1, 70, 0.1):
-    fy1_init_v, fy1_init_p = terms(m1_pos, fy1_pos, t, 0)
+    fy1_init_v, fy1_init_p = terms(m1_pos, fy5_pos, t, 1200)
     if 70 <= fy1_init_v <= 140 and fy1_init_p[0] >= 0 and fy1_init_p[1] >= 0 and fy1_init_p[2] >= 0:
         fy1_init_v_list.append(fy1_init_v)
         fy1_init_p_list.append(fy1_init_p)
         fy1_t_init_list.append(t)
 
-    fy2_init_v, fy2_init_p = terms(m1_pos, fy1_pos, t, 400)
+    fy2_init_v, fy2_init_p = terms(m1_pos, fy5_pos, t, 1150)
     if 70 <= fy2_init_v <= 140 and fy2_init_p[0] >= 0 and fy2_init_p[1] >= 0 and fy2_init_p[2] >= 0:
         fy2_init_v_list.append(fy2_init_v)
         fy2_init_p_list.append(fy2_init_p)
         fy2_t_init_list.append(t)
 
-    fy3_init_v, fy3_init_p = terms(m1_pos, fy1_pos, t, 1300)
+    fy3_init_v, fy3_init_p = terms(m1_pos, fy5_pos, t, 1000)
     if 70 <= fy3_init_v <= 140 and fy3_init_p[0] >= 0 and fy3_init_p[1] >= 0 and fy3_init_p[2] >= 0:
         fy3_init_v_list.append(fy3_init_v)
         fy3_init_p_list.append(fy3_init_p)

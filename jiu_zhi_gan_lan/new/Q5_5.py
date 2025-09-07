@@ -1,15 +1,12 @@
-# from bisect import bisect_left
 from itertools import combinations
-# from itertools import product
-from core import *
 from missile_search import validity_time, validity_time_set
 from matplotlib import pyplot as plt
-# from scipy.optimize import basinhopping, minimize
+from scipy.optimize import basinhopping, minimize
 import random
-# from scipy.optimize._basinhopping import RandomDisplacement
-from terms_P import terms
+from terms_P import *
 import time
 import numpy as np
+from Q4_2 import *
 # 最简化的字体设置，确保兼容性
 plt.rcParams["font.family"] = ["SimHei", "sans-serif"]
 plt.rcParams["axes.unicode_minus"] = False  # 解决负号显示问题
@@ -24,14 +21,7 @@ print('本次随机种子 =', rand_seed)
 np.random.seed(rand_seed)
 start = time.perf_counter()
 
-m1 = missile_closure(20000, 0, 2000)
-m2 = missile_closure(19000, 600, 2100)
-m3 = missile_closure(18000, -600, 1900)
-fy1_pos = np.array([17800, 0, 1800])
-fy2_pos = np.array([12000, 1400, 1400])
-fy3_pos = np.array([6000, -3000, 700])
-fy4_pos = np.array([11000, 2000, 1800])
-fy5_pos = np.array([13000, -2000, 1300])
+fy1_pos = np.array([13000, -2000, 1300])
 fy1_init_v_list_b1 = []
 fy1_init_p_list_b1 = []
 fy1_init_t_list_b1 = []
@@ -47,158 +37,6 @@ fy1_best_time_b3 = -1
 fy1_best_v_b3 = None
 fy1_best_p_b3 = None
 fy1_best_t_b3 = None
-
-# for t in np.arange(0.1, 70, 0.1):
-#     fy1_init_v, fy1_init_p = terms(m1_pos, fy1_pos, t, 1300)
-#     if 70 <= fy1_init_v <= 140 and fy1_init_p[0] >= 0 and fy1_init_p[1] >= 0 and fy1_init_p[2] >= 0:
-#         fy1_init_v_list_b1.append(fy1_init_v)
-#         fy1_init_p_list_b1.append(fy1_init_p)
-#         fy1_init_t_list_b1.append(t)
-# for i in range(len(fy1_init_v_list_b1)):
-#     fy1_init_v = fy1_init_v_list_b1[i]
-#     fy1_init_p = fy1_init_p_list_b1[i]
-#     fy1_t_init = fy1_init_t_list_b1[i]
-#     c = cloud_closure(fy1_init_p[0], fy1_init_p[1], fy1_init_p[2], fy1_t_init)
-#     time_ = validity_time(m1, target_true_pos, c, fy1_t_init)
-#     if time_ > fy1_best_time_b1:
-#         fy1_best_time_b1 = time_
-#         fy1_best_v_b1 = fy1_init_v
-#         fy1_best_p_b1 = fy1_init_p
-#         fy1_best_t_b1 = fy1_t_init
-#     # print(time_)
-# print("fy1 to m1!", fy1_best_v_b1, fy1_best_p_b1, fy1_best_time_b1, fy1_best_t_b1)
-# fy1_init_v_list_b2 = []
-# fy1_init_p_list_b2 = []
-# fy1_init_t_list_b2 = []
-# for t in np.arange(0.1, 70, 0.1):
-#     fy1_init_v, fy1_init_p = terms(m1_pos, fy1_pos, t, 800)
-#     if 70 <= fy1_init_v <= 140 and fy1_init_p[0] >= 0 and fy1_init_p[1] >= 0 and fy1_init_p[2] >= 0:
-#         fy1_init_v_list_b2.append(fy1_init_v)
-#         fy1_init_p_list_b2.append(fy1_init_p)
-#         fy1_init_t_list_b2.append(t)
-# for i in range(len(fy1_init_v_list_b2)):
-#     fy1_init_v = fy1_init_v_list_b2[i]
-#     fy1_init_p = fy1_init_p_list_b2[i]
-#     fy1_t_init = fy1_init_t_list_b2[i]
-#     c = cloud_closure(fy1_init_p[0], fy1_init_p[1], fy1_init_p[2], fy1_t_init)
-#     time_ = validity_time(m1, target_true_pos, c, fy1_t_init)
-#     if time_ > fy1_best_time_b2:
-#         fy1_best_time_b2 = time_
-#         fy1_best_v_b2 = fy1_init_v
-#         fy1_best_p_b2 = fy1_init_p
-#         fy1_best_t_b2 = fy1_t_init
-#     # print(time)
-# print("fy1 to m1!", fy1_best_v_b2, fy1_best_p_b2, fy1_best_time_b2, fy1_best_t_b2)
-# fy1_init_v_list_b3 = []
-# fy1_init_p_list_b3 = []
-# fy1_init_t_list_b3 = []
-# for t in np.arange(0.1, 70, 0.1):
-#     fy1_init_v, fy1_init_p = terms(m1_pos, fy1_pos, t, 250)
-#     if 70 <= fy1_init_v <= 140 and fy1_init_p[0] >= 0 and fy1_init_p[1] >= 0 and fy1_init_p[2] >= 0:
-#         fy1_init_v_list_b3.append(fy1_init_v)
-#         fy1_init_p_list_b3.append(fy1_init_p)
-#         fy1_init_t_list_b3.append(t)
-# for i in range(len(fy1_init_v_list_b3)):
-#     fy1_init_v = fy1_init_v_list_b3[i]
-#     fy1_init_p = fy1_init_p_list_b3[i]
-#     fy1_t_init = fy1_init_t_list_b3[i]
-#     c = cloud_closure(fy1_init_p[0], fy1_init_p[1], fy1_init_p[2], fy1_t_init)
-#     time_ = validity_time(m1, target_true_pos, c, fy1_t_init)
-#     if time_ > fy1_best_time_b3:
-#         fy1_best_time_b3 = time_
-#         fy1_best_v_b3 = fy1_init_v
-#         fy1_best_p_b3 = fy1_init_p
-#         fy1_best_t_b3 = fy1_t_init
-#     # print(time)
-# print("fy1 to m1!", fy1_best_v_b3, fy1_best_p_b3, fy1_best_time_b3, fy1_best_t_b3)
-
-
-def find_best_params(missile, fy_pos, target_pos, distance_range, step):
-    """
-    在指定范围内搜索最佳的三个提前量。
-
-    参数:
-    - missile_pos: 导弹位置 (numpy.array)
-    - fy_pos: 无人机位置 (numpy.array)
-    - target_pos: 真目标位置 (numpy.array)
-    - distance_range: 提前量范围 (min, max)
-    - step: 步长 (float)
-
-    返回:
-    - best_times: 最佳遮蔽时间 (list)
-    - best_vs: 最佳速度 (list)
-    - best_ps: 最佳爆点位置 (list)
-    - best_ts: 最佳爆点时间 (list)
-    """
-    best_times = [-1, -1, -1]
-    best_vs = [None, None, None]
-    best_ps = [None, None, None]
-    best_ts = [None, None, None]
-    best_ms = [None, None, None]
-    best_bs = [None, None, None]
-
-    distances = np.arange(distance_range[0], distance_range[1] + step, step)
-    nonb = 0
-    for m in missile:
-
-        # m = missile[0]
-        # for _ in range(0, 1):
-        for distance in distances:
-            init_v_list = []
-            init_p_list = []
-            init_t_list = []
-            n = 0
-            for t in np.arange(0.1, 70, 0.1):
-                # print(missile_pos(t))
-                init_v, init_p = terms(m(0), fy_pos, t, distance)
-                # if m(t)[0] <= 0 and m(t)[1] <= 0 and m(t)[1] <= 0:
-                #     break
-                # print(init_v, init_p)
-                if init_v != np.inf:
-                    n +=1
-                    init_v_list.append(init_v)
-                    init_p_list.append(init_p)
-                    init_t_list.append(t)
-                # print(init_v_list)
-                # print(init_p_list)
-                # print(init_t_list)
-            print("当前提前量", distance, ",当前导弹", m(0), ",一共有", n, "条有效数据")
-            print(best_times)
-            for j in range(len(init_v_list)):
-                init_v = init_v_list[j]
-                init_p = init_p_list[j]
-                init_t = init_t_list[j]
-                c = cloud_closure(init_p[0], init_p[1], init_p[2], init_t)
-                # print(m(0), c(init_t), init_t)
-                time_ = validity_time(m, target_pos, c, init_t)
-                # print(time_, m(0), c(init_t), init_p, init_t, distance)
-                if time_ > best_times[nonb]:  # 只和当前导弹的历史最佳比
-                    best_times[nonb] = time_
-                    best_vs[nonb] = init_v
-                    best_ps[nonb] = init_p
-                    best_ts[nonb] = init_t
-                    best_ms[nonb] = m
-                    best_bs[nonb] = distance
-        nonb += 1
-
-
-
-    return best_times, best_vs, best_ps, best_ts, best_ms, best_bs
-maaaaa = [m1, m2, m3]
-# best_times1, best_vs1, best_ps1, best_ts1, best_ms1, best_bs1 = find_best_params([m1, m2, m3], fy1_pos, target_true_pos, [0, 20000], 100)
-# best_times2, best_vs2, best_ps2, best_ts2, best_ms2, best_bs2 = find_best_params([m1, m2, m3], fy2_pos, target_true_pos, [0, 20000], 100)
-# best_times3, best_vs3, best_ps3, best_ts3, best_ms3, best_bs3 = find_best_params([m1, m2, m3], fy3_pos, target_true_pos, [0, 20000], 100)
-best_times4, best_vs4, best_ps4, best_ts4, best_ms4, best_bs4 = find_best_params([m1, m2, m3], fy4_pos, target_true_pos, [0, 20000], 100)
-# best_times5, best_vs5, best_ps5, best_ts5, best_ms5, best_bs5 = find_best_params([m1, m2, m3], fy5_pos, target_true_pos, [0, 20000], 100)
-
-
-
-for i in range(3):
-    # print(f"Best Time: {best_times1[i]}, Best V: {best_vs1[i]}, Best P: {best_ps1[i]}, Best T: {best_ts1[i]}, Best M: {maaaaa[i](0)}, Best B:{best_bs1[i]}")
-    # print(f"Best Time: {best_times2[i]}, Best V: {best_vs2[i]}, Best P: {best_ps2[i]}, Best T: {best_ts2[i]}, Best M: {maaaaa[i](0)}, Best B:{best_bs2[i]}")
-    # print(f"Best Time: {best_times3[i]}, Best V: {best_vs3[i]}, Best P: {best_ps3[i]}, Best T: {best_ts3[i]}, Best M: {maaaaa[i](0)}, Best B:{best_bs3[i]}")
-    print(f"Best Time: {best_times4[i]}, Best V: {best_vs4[i]}, Best P: {best_ps4[i]}, Best T: {best_ts4[i]}, Best M: {maaaaa[i](0)}, Best B:{best_bs4[i]}")
-    # print(f"Best Time: {best_times5[i]}, Best V: {best_vs5[i]}, Best P: {best_ps5[i]}, Best T: {best_ts5[i]}, Best M: {maaaaa[i](0)}, Best B:{best_bs5[i]}")
 
 class Optimization:
     def __init__(self):
@@ -222,26 +60,6 @@ class Optimization:
 
         if len(self.history) % 100 == 0:
             print(f"Iteration: {len(self.history)}:Current value: {-f:.4f}, Best Value: {-self.best_value:.4f}{x}")
-# class ConstrainedRandomDisplacement(RandomDisplacement):
-#     def __init__(self, stepsize=0.5, bounds=None):
-#         super().__init__(stepsize)
-#         self.bounds = np.array(bounds)  # [(low1, high1), ...]
-#
-#     def __call__(self, x):
-#         # x 是 [t1, t2, t3]
-#         x_new = x.copy()
-#         x_new += self.rng.uniform(-self.stepsize, self.stepsize, size=x.shape)
-#
-#         # 投影到约束域：t2 - t1 >= 1, t3 - t2 >= 1
-#         t1, t2, t3, _, _, _ = x_new
-#         if t2 - t1 < 1.0:
-#             t2 = t1 + 1.0
-#         if t3 - t2 < 1.0:
-#             t3 = t2 + 1.0
-#         x_new = np.array([t1, t2, t3, x_new[3], x_new[4], x_new[5]])
-#
-#         return x_new
-
 
 def sliding_dwell_init(m_pos, fy_pos, corridor):
     m_pos_ = m_pos
@@ -257,7 +75,7 @@ def sliding_dwell_init(m_pos, fy_pos, corridor):
         dir = np.array([np.cos(theta), np.sin(theta)])
         dwell = 0.
         t = 0.
-        dt = 0.1
+        dt = 0.01
         m_pos = np.array([m_pos_[0], m_pos_[1]])
         UM = -m_pos / np.linalg.norm(-m_pos)
         while t <= 70:
@@ -271,7 +89,7 @@ def sliding_dwell_init(m_pos, fy_pos, corridor):
         return -dwell
     return sliding_dwell
 
-objective_1 = sliding_dwell_init(m1_pos, fy1_pos, [300, 1400])
+objective_1 = sliding_dwell_init(m1_pos, fy1_pos, [0, 1500])
 # step_size = ConstrainedRandomDisplacement(stepsize=0.5)
 tracker_1 = Optimization()
 bounds_1 = [(0, 2*np.pi), (70/10, 140/10)]
@@ -284,24 +102,25 @@ minimizer_kwargs_1 = {
     "options": {"maxiter": 100}
 }
 
-# result_sa1 = basinhopping(
-#     objective_1,
-#     initial_params_1,
-#     niter=100,
-#     minimizer_kwargs=minimizer_kwargs_1,
-#     stepsize = 0.5,
-#     accept_test=None,
-#     callback=tracker_1,
-# )
+result_sa1 = basinhopping(
+    objective_1,
+    initial_params_1,
+    niter=500,
+    minimizer_kwargs=minimizer_kwargs_1,
+    stepsize = 0.5,
+    accept_test=None,
+    callback=tracker_1,
+)
 best_params_sa = result_sa1.x
-# best_value_sa = -result_sa1.fun
+best_value_sa = -result_sa1.fun
 best_params_sa[0] = np.pi
-best_params_sa[1] = 9
+# best_params_sa[1] = 14
 best_value_sa = -objective_1(best_params_sa)
 print(f"最佳航线角：{best_params_sa[0]}")
 print(f"最佳速度：{best_params_sa[1]*10}")
 print(f"最长潜在遮蔽能力：{best_value_sa:.4f}")
-
+avo = best_params_sa[0]
+v = best_params_sa[1]*10
 def grid_guess(theta, v, fy_pos,
                rt_rng=(0.0, 4.0, 0.5),
                bt_rng=(0.0, 6.0, 0.5),
@@ -366,11 +185,11 @@ def fast_3mask_grid(theta, v, fy_pos,
             # 测试第一弹
             if boolunjump:
                 m1 = obj(np.array([rt, bt]))  # 只测第一弹
-            print(f"投弹时间{rt:.2f}爆炸时间{bt:.2f}有效遮挡{m1:.2f},m1:{Nmx}")
             if m1<0.5:
                 m1 = 0
             if m1:
                 tab = True
+                # print(f"投弹时间{rt:.2f}爆炸时间{bt:.2f}有效遮挡{m1:.2f},m1:{Nmx}")
             if tab == True and m1 == False:
                 Nmx += 1
             if m1 > min_single:
@@ -455,7 +274,7 @@ def bomb6_bh_obj_init_user(theta, v, fy_pos):
         mask_time3 = validity_time_set(m1, target_true_pos, c3, rt1+ rt2+rt3 + bt3)
         # print("第三爆点遮蔽时长:", len(mask_time3)/100, "投弹时间：", rt1+rt2+rt3, "引爆时间", bt3)
         total_mask_time3 = total_mask_time2 | mask_time3
-        print("总遮蔽时长", len(total_mask_time3)/10)
+        # print("总遮蔽时长", len(total_mask_time3)/10)
         return -len(total_mask_time3)/10, len(mask_time1)/10, len(mask_time2)/10, len(mask_time3)/10
     return bomb6_bh_obj
 def bomb2_bh_obj_init_user(theta, v, fy_pos):
@@ -507,15 +326,15 @@ def bomb2_bh_obj_init_user(theta, v, fy_pos):
 #    best_params_sa[0] = theta
 #    best_params_sa[1]*10 = v
 # 2. 调用下面函数
-# good_x0 = fast_3mask_grid(
-#         theta   = best_params_sa[0],
-#         v       = best_params_sa[1]*10,
-#         fy_pos  = fy1_pos,
-#         rt_range=(0.0, 5.0, 1),   # 步长可再调细
-#         bt_range=(0.0, 10.0, 0.1),
-#         min_single=0.01,   # 单弹至少 0.01 s
-#         min_total=0.03)    # 总遮 0.03 s
-# print('网格找到有效初值:', good_x0)
+good_x0 = fast_3mask_grid(
+        theta   = best_params_sa[0],
+        v       = best_params_sa[1]*10,
+        fy_pos  = fy1_pos,
+        rt_range=(0.0, 7, 0.1),   # 步长可再调细
+        bt_range=(0.0, 8, 0.1),
+        min_single=0.01,   # 单弹至少 0.01 s
+        min_total=0.03)    # 总遮 0.03 s
+print('网格找到有效初值:', good_x0)
 
 
 # 3. 用 good_x0 代替原来的 initial_params_2 即可
@@ -524,7 +343,7 @@ print(comb)
 rt1, bt1, _ = comb[0]
 rt2, bt2, _ = comb[1]
 rt3, bt3, _ = comb[2]
-initial_params_2 = np.array([rt1, rt2, rt3, bt1, bt2, bt3])
+initial_params_2 = np.array([rt1, rt2-rt1, rt3-rt2, bt1, bt2, bt3])
 print("————————————————————————————————————")
 print("开始模拟退火...")
 print("开始第二步退火，查找三个烟雾弹的最佳爆点，以及最大遮蔽时长")
@@ -537,19 +356,119 @@ minimizer_kwargs_2 = {
 }
 tracker_2 = Optimization()
 # take_step = ConstrainedRandomDisplacement(stepsize=0.5, bounds=bounds_2)
-# result_sa = basinhopping(
-#     objective_2,
-#     initial_params_2,
-#     niter=1000,
-#     minimizer_kwargs=minimizer_kwargs_2,
-#     stepsize = 0.4,
-#     accept_test=None,
-#     callback=tracker_2,
-# )
+result_sa = basinhopping(
+    objective_2,
+    initial_params_2,
+    niter=2000,
+    minimizer_kwargs=minimizer_kwargs_2,
+    stepsize = 0.2,
+    accept_test=None,
+    callback=tracker_2,
+)
+
+init_as = [
+    [fy1_pos, fy1_best_v, fy1_best_p, fy1_best_t],
+    [fy2_pos, fy2_best_v, fy2_best_p, fy2_best_t],
+    [fy3_pos, fy3_best_v, fy3_best_p, fy3_best_t]
+]
+def reverse_projectile_point(fy, t0, t1, angle_rad, v_xy):
+    # print(fy, t0, t1, angle_rad, v_xy)
+    g = 9.8
+    total_time = t0 + t1
+    h = 0.5 * g * t0 ** 2
+    pz = fy[2] - h
+    d = v_xy * total_time
+    px = fy[0] + d * np.cos(angle_rad)
+    py = fy[1] + d * np.sin(angle_rad)
+    # print(py, fy[1], d, np.sin(angle_rad), angle_rad)
+    return np.array([px, py, pz])
+def objective_user(params):
+    a, v, t_release, t_detonate = params
+    t_release = t_release
+    t_detonate = t_detonate
+    a = a
+    # a = a * np.pi/10
+    # a = angle_to_unit_vector_as(a)
+    v = v
+    # pos_release = init_as[i][0] + a * v * t_release
+    # print(pos_release, a)
+    # # print("爆点坐标无z",pos_detonate, "v", v, "t", t_release+t_detonate, "a", a)
+    # pos_detonate = init_as[i][0] + a * v * (t_detonate+t_release)
+    # pos_detonate[2] = 1800 - 0.5 * g * t_detonate ** 2
+    # 1. 把角度转成水平单位向量（二维）
+    angle_rad = a  # 已经是弧度
+    dir_vec = np.array([np.cos(angle_rad),
+                        np.sin(angle_rad)])  # 二维方向
+
+    # 2. 水平位移
+    d_release = v * t_release  # 水平距离
+    delta_xy = dir_vec * d_release  # 二维偏移量
+
+    # 3. 投弹点坐标（假设飞机高度不变）
+    pos_release = np.array([17800, 0, 1800])  # 复制飞机初始位置
+    pos_release[0] += delta_xy[0]  # x
+    pos_release[1] += delta_xy[1]  # y
+    pos_detonate = reverse_projectile_point(np.array([17800, 0, 1800]), t_detonate, t_release, a, v)
+    # print("爆点坐标有z",pos_detonate[0] , pos_detonate[1], pos_detonate[2],t_release + t_detonate)
+    c = cloud_closure(pos_detonate[0], pos_detonate[1], pos_detonate[2], t_release + t_detonate)
+    time = validity_time(m1, target_true_pos, c, t_release + t_detonate)
+    return pos_release, pos_detonate, time
+def objective_user_111(params):
+    a, v, t_release, t_detonate = params
+    # 水平方向单位向量
+    dir_x = np.cos(a)
+    dir_y = np.sin(a)
+
+    # 水平位移
+    d_xy = v * t_release
+    # 投弹点
+    x_release = 17800 + dir_x * d_xy
+    y_release = 0 + dir_y * d_xy
+    z_release = 1800  # 高度不变
+    # 总飞行时间
+    t_total = t_release + t_detonate
+
+    # 水平总位移
+    d_total_xy = v * t_total
+
+    # 爆点水平坐标
+    x_det = 17800 + dir_x * d_total_xy
+    y_det = 0 + dir_y * d_total_xy
+
+    # 垂直自由落体
+    g = 9.8
+    z_det = 1800 - 0.5 * g * t_detonate ** 2
+    casdas = cloud_closure(x_det, y_det, z_det, t_release + t_detonate)
+    timeasasda = validity_time_set(m1, target_true_pos, casdas, t_release + t_detonate)
+    return np.array([x_release, y_release, z_release]), np.array([x_det, y_det, z_det]), timeasasda
+
+
 best_params_sa = result_sa.x
+rt1, rt2, rt3, bt1, bt2, bt3 = best_params_sa
 best_value_sa = -result_sa.fun
 print(f"最佳投弹时间：{best_params_sa[0], best_params_sa[1], best_params_sa[2]}")
 print(f"最佳爆炸时间：{best_params_sa[3], best_params_sa[4], best_params_sa[5]}")
 print(f"最大遮蔽时长：{best_value_sa:.4f}")
 end = time.perf_counter()
 print(f"本次耗时：{end - start:.6f} 秒")
+bom1 = np.array([avo, v ,rt1, bt1])
+bom2 = np.array([avo, v ,rt1+rt2, bt2])
+bom3 = np.array([avo, v ,rt1+rt2+rt3, bt3])
+print(bom1)
+pos_release, pos_detonate, time11 = objective_user(bom1)
+
+print("————————————————————————————————————")
+print(bom1)
+print(bom2)
+print(bom3)
+re1, de1, ti1 = objective_user_111(bom1)
+re2, de2, ti2 = objective_user_111(bom2)
+re3, de3, ti3 = objective_user_111(bom3)
+print(re1, de1, len(ti1))
+print(re2, de2, len(ti2))
+print(re3, de3, len(ti3))
+print("ti1 时段数:", len(ti1))
+print("ti2 时段数:", len(ti2))
+print("ti3 时段数:", len(ti3))
+print("并集时段数:", len(ti1 | ti2 | ti3))
+ti555 = ti1 | ti2 | ti3

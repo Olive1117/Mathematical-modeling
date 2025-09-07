@@ -1,15 +1,12 @@
-from bisect import bisect_left
 from itertools import combinations
-from itertools import product
-from core import *
 from missile_search import validity_time, validity_time_set
 from matplotlib import pyplot as plt
 from scipy.optimize import basinhopping, minimize
 import random
-from scipy.optimize._basinhopping import RandomDisplacement
 from terms_P import *
 import time
 import numpy as np
+from Q4_2 import *
 # 最简化的字体设置，确保兼容性
 plt.rcParams["font.family"] = ["SimHei", "sans-serif"]
 plt.rcParams["axes.unicode_minus"] = False  # 解决负号显示问题
@@ -125,7 +122,7 @@ class Optimization:
         self.best_history.append(self.best_value)
         self.best_params_history.append(self.best_params.copy())
 
-        if len(self.history) % 30 == 0:
+        if len(self.history) % 100 == 0:
             print(f"Iteration: {len(self.history)}:Current value: {-f:.4f}, Best Value: {-self.best_value:.4f}{x}")
 # class ConstrainedRandomDisplacement(RandomDisplacement):
 #     def __init__(self, stepsize=0.5, bounds=None):
@@ -192,7 +189,7 @@ minimizer_kwargs_1 = {
 result_sa1 = basinhopping(
     objective_1,
     initial_params_1,
-    niter=600,
+    niter=500,
     minimizer_kwargs=minimizer_kwargs_1,
     stepsize = 0.5,
     accept_test=None,
@@ -206,7 +203,8 @@ best_value_sa = -objective_1(best_params_sa)
 print(f"最佳航线角：{best_params_sa[0]}")
 print(f"最佳速度：{best_params_sa[1]*10}")
 print(f"最长潜在遮蔽能力：{best_value_sa:.4f}")
-
+avo = best_params_sa[0]
+v = best_params_sa[1]*10
 def grid_guess(theta, v, fy_pos,
                rt_rng=(0.0, 4.0, 0.5),
                bt_rng=(0.0, 6.0, 0.5),
@@ -360,7 +358,7 @@ def bomb6_bh_obj_init_user(theta, v, fy_pos):
         mask_time3 = validity_time_set(m1, target_true_pos, c3, rt1+ rt2+rt3 + bt3)
         # print("第三爆点遮蔽时长:", len(mask_time3)/100, "投弹时间：", rt1+rt2+rt3, "引爆时间", bt3)
         total_mask_time3 = total_mask_time2 | mask_time3
-        print("总遮蔽时长", len(total_mask_time3)/10)
+        # print("总遮蔽时长", len(total_mask_time3)/10)
         return -len(total_mask_time3)/10, len(mask_time1)/10, len(mask_time2)/10, len(mask_time3)/10
     return bomb6_bh_obj
 def bomb2_bh_obj_init_user(theta, v, fy_pos):
@@ -451,10 +449,144 @@ result_sa = basinhopping(
     accept_test=None,
     callback=tracker_2,
 )
+
+init_as = [
+    [fy1_pos, fy1_best_v, fy1_best_p, fy1_best_t],
+    [fy2_pos, fy2_best_v, fy2_best_p, fy2_best_t],
+    [fy3_pos, fy3_best_v, fy3_best_p, fy3_best_t]
+]
+def reverse_projectile_point(fy, t0, t1, angle_rad, v_xy):
+    # print(fy, t0, t1, angle_rad, v_xy)
+    g = 9.8
+    total_time = t0 + t1
+    h = 0.5 * g * t0 ** 2
+    pz = fy[2] - h
+    d = v_xy * total_time
+    px = fy[0] + d * np.cos(angle_rad)
+    py = fy[1] + d * np.sin(angle_rad)
+    # print(py, fy[1], d, np.sin(angle_rad), angle_rad)
+    return np.array([px, py, pz])
+def objective_user(params):
+    a, v, t_release, t_detonate = params
+    t_release = t_release
+    t_detonate = t_detonate
+    a = a
+    # a = a * np.pi/10
+    # a = angle_to_unit_vector_as(a)
+    v = v
+    # pos_release = init_as[i][0] + a * v * t_release
+    # print(pos_release, a)
+    # # print("爆点坐标无z",pos_detonate, "v", v, "t", t_release+t_detonate, "a", a)
+    # pos_detonate = init_as[i][0] + a * v * (t_detonate+t_release)
+    # pos_detonate[2] = 1800 - 0.5 * g * t_detonate ** 2
+    # 1. 把角度转成水平单位向量（二维）
+    angle_rad = a  # 已经是弧度
+    dir_vec = np.array([np.cos(angle_rad),
+                        np.sin(angle_rad)])  # 二维方向
+
+    # 2. 水平位移
+    d_release = v * t_release  # 水平距离
+    delta_xy = dir_vec * d_release  # 二维偏移量
+
+    # 3. 投弹点坐标（假设飞机高度不变）
+    pos_release = np.array([17800, 0, 1800])  # 复制飞机初始位置
+    pos_release[0] += delta_xy[0]  # x
+    pos_release[1] += delta_xy[1]  # y
+    pos_detonate = reverse_projectile_point(np.array([17800, 0, 1800]), t_detonate, t_release, a, v)
+    # print("爆点坐标有z",pos_detonate[0] , pos_detonate[1], pos_detonate[2],t_release + t_detonate)
+    c = cloud_closure(pos_detonate[0], pos_detonate[1], pos_detonate[2], t_release + t_detonate)
+    time = validity_time(m1, target_true_pos, c, t_release + t_detonate)
+    return pos_release, pos_detonate, time
+def objective_user_111(params):
+    a, v, t_release, t_detonate = params
+    # 水平方向单位向量
+    dir_x = np.cos(a)
+    dir_y = np.sin(a)
+
+    # 水平位移
+    d_xy = v * t_release
+    # 投弹点
+    x_release = 17800 + dir_x * d_xy
+    y_release = 0 + dir_y * d_xy
+    z_release = 1800  # 高度不变
+    # 总飞行时间
+    t_total = t_release + t_detonate
+
+    # 水平总位移
+    d_total_xy = v * t_total
+
+    # 爆点水平坐标
+    x_det = 17800 + dir_x * d_total_xy
+    y_det = 0 + dir_y * d_total_xy
+
+    # 垂直自由落体
+    g = 9.8
+    z_det = 1800 - 0.5 * g * t_detonate ** 2
+    casdas = cloud_closure(x_det, y_det, z_det, t_release + t_detonate)
+    timeasasda = validity_time_set(m1, target_true_pos, casdas, t_release + t_detonate)
+    return np.array([x_release, y_release, z_release]), np.array([x_det, y_det, z_det]), timeasasda
+
+
 best_params_sa = result_sa.x
+rt1, rt2, rt3, bt1, bt2, bt3 = best_params_sa
 best_value_sa = -result_sa.fun
 print(f"最佳投弹时间：{best_params_sa[0], best_params_sa[1], best_params_sa[2]}")
 print(f"最佳爆炸时间：{best_params_sa[3], best_params_sa[4], best_params_sa[5]}")
 print(f"最大遮蔽时长：{best_value_sa:.4f}")
 end = time.perf_counter()
 print(f"本次耗时：{end - start:.6f} 秒")
+bom1 = np.array([avo, v ,rt1, bt1])
+bom2 = np.array([avo, v ,rt1+rt2, bt2])
+bom3 = np.array([avo, v ,rt1+rt2+rt3, bt3])
+print(bom1)
+pos_release, pos_detonate, time11 = objective_user(bom1)
+# M = np.linalg.norm(pos_detonate - m1(best_params_sa[3]))
+print("\n 模拟退火优化结果bom1")
+print(f"最佳转向角：{avo}")
+print(f"最佳速度：{v}")
+print(f"最佳投弹时间：{best_params_sa[0]}")
+print(f"最佳投弹点：{pos_release}")
+print(f"最佳引爆时间：{best_params_sa[3]}")
+print(f"最佳引爆点：{pos_detonate}")
+print(f"最大有效遮蔽时间： {time11}")
+# print(f"爆时烟雾与导弹距离：{M}")
+# ji = objective_user_set(best_params_sa)
+
+print(bom2)
+pos_release, pos_detonate, time22 = objective_user(bom2)
+print("\n 模拟退火优化结果bom2")
+print(f"最佳转向角：{avo}")
+print(f"最佳速度：{v}")
+print(f"最佳投弹时间：{best_params_sa[1]}")
+print(f"最佳投弹点：{pos_release}")
+print(f"最佳引爆时间：{best_params_sa[4]}")
+print(f"最佳引爆点：{pos_detonate}")
+print(f"最大有效遮蔽时间： {time22}")
+
+print(bom3)
+pos_release, pos_detonate, time33 = objective_user(bom3)
+print("\n 模拟退火优化结果bom3")
+print(f"最佳转向角：{avo}")
+print(f"最佳速度：{v}")
+print(f"最佳投弹时间：{best_params_sa[2]}")
+print(f"最佳投弹点：{pos_release}")
+print(f"最佳引爆时间：{best_params_sa[5]}")
+print(f"最佳引爆点：{pos_detonate}")
+print(f"最大有效遮蔽时间： {time33}")
+print(f"最大总有效遮蔽时间： {best_value_sa}")
+
+
+print("————————————————————————————————————")
+print(bom1)
+print(bom2)
+print(bom3)
+re1, de1, ti1 = objective_user_111(bom1)
+re2, de2, ti2 = objective_user_111(bom2)
+re3, de3, ti3 = objective_user_111(bom3)
+print(re1, de1, len(ti1))
+print(re2, de2, len(ti2))
+print(re3, de3, len(ti3))
+print("ti1 时段数:", len(ti1))
+print("ti2 时段数:", len(ti2))
+print("ti3 时段数:", len(ti3))
+print("并集时段数:", len(ti1 | ti2 | ti3))
