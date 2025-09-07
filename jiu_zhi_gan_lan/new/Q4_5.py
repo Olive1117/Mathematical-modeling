@@ -1,213 +1,166 @@
-from core import *
-from missile_search import validity_time, validity_time_set
-from matplotlib import pyplot as plt
-from scipy.optimize import basinhopping, minimize
-import random
-from Q4_2 import *
 import numpy as np
-from matplotlib.ticker import MaxNLocator
-# 最简化的字体设置，确保兼容性
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+# 设置中文字体
 plt.rcParams["font.family"] = ["SimHei", "sans-serif"]
-plt.rcParams["axes.unicode_minus"] = False  # 解决负号显示问题
-
-# 基础样式设置
-plt.rcParams["figure.figsize"] = (8, 5)
-plt.rcParams["figure.dpi"] = 80
-plt.rcParams["font.size"] = 12
-
-init_as = [
-    [fy1_pos, fy1_best_v, fy1_best_p, fy1_best_t],
-    [fy2_pos, fy2_best_v, fy2_best_p, fy2_best_t],
-    [fy3_pos, fy3_best_v, fy3_best_p, fy3_best_t]
-]
-total_effective_shaded_area = set()
-for i in range(0, 3):
-    def objective(params):
-        a, v, t_release, t_detonate = params
-        # print(t_release, t_detonate)
-        t_release = t_release / 10
-        t_detonate = t_detonate / 10
-        a = a / 10
-        # a = a * np.pi/10
-        # a = angle_to_unit_vector_as(a)
-        v = v
-        # pos_release = init_as[i][0] + a * v * t_release
-        # print(pos_release, a)
-        # # print("爆点坐标无z",pos_detonate, "v", v, "t", t_release+t_detonate, "a", a)
-        # pos_detonate = init_as[i][0] + a * v * (t_detonate+t_release)
-        # pos_detonate[2] = 1800 - 0.5 * g * t_detonate ** 2
-
-        pos_detonate = reverse_projectile_point(init_as[i][0].copy(), t_detonate, t_release, a, v)
-        # print("爆点坐标有z",pos_detonate[0] , pos_detonate[1], pos_detonate[2],t_release + t_detonate)
-        c = cloud_closure(pos_detonate[0], pos_detonate[1], pos_detonate[2], t_release + t_detonate)
-        time = validity_time(m1, target_true_pos, c, t_release + t_detonate)
-        return -time * 100
+plt.rcParams["axes.unicode_minus"] = False
 
 
-    def objective_user(params):
-        a, v, t_release, t_detonate = params
-        a, v, t_release, t_detonate = params
-        t_release = t_release / 10
-        t_detonate = t_detonate / 10
-        a = a / 10
-        # a = a * np.pi/10
-        # a = angle_to_unit_vector_as(a)
-        v = v
-        # pos_release = init_as[i][0] + a * v * t_release
-        # print(pos_release, a)
-        # # print("爆点坐标无z",pos_detonate, "v", v, "t", t_release+t_detonate, "a", a)
-        # pos_detonate = init_as[i][0] + a * v * (t_detonate+t_release)
-        # pos_detonate[2] = 1800 - 0.5 * g * t_detonate ** 2
-        # 1. 把角度转成水平单位向量（二维）
-        angle_rad = a  # 已经是弧度
-        dir_vec = np.array([np.cos(angle_rad),
-                            np.sin(angle_rad)])  # 二维方向
+def plot_problem4_3d():
+    """
+    绘制问题4的三维示意图：FY1、FY2、FY3对M1的干扰
+    """
+    # 创建3D图形
+    fig = plt.figure(figsize=(16, 12))
+    ax = fig.add_subplot(111, projection='3d')
 
-        # 2. 水平位移
-        d_release = v * t_release  # 水平距离
-        delta_xy = dir_vec * d_release  # 二维偏移量
+    # 导弹M1初始位置
+    m1_pos = np.array([20000, 0, 2000])
 
-        # 3. 投弹点坐标（假设飞机高度不变）
-        pos_release = init_as[i][0].copy()  # 复制飞机初始位置
-        pos_release[0] += delta_xy[0]  # x
-        pos_release[1] += delta_xy[1]  # y
-        pos_detonate = reverse_projectile_point(init_as[i][0].copy(), t_detonate, t_release, a, v)
-        # print("爆点坐标有z",pos_detonate[0] , pos_detonate[1], pos_detonate[2],t_release + t_detonate)
-        c = cloud_closure(pos_detonate[0], pos_detonate[1], pos_detonate[2], t_release + t_detonate)
-        time = validity_time(m1, target_true_pos, c, t_release + t_detonate)
-        return pos_release, pos_detonate, time
-    def objective_user_set(params):
-        a, v, t_release, t_detonate = params
-        a, v, t_release, t_detonate = params
-        t_release = t_release / 10
-        t_detonate = t_detonate / 10
-        a = a / 10
-        # a = a * np.pi/10
-        # a = angle_to_unit_vector_as(a)
-        v = v
-        # pos_release = init_as[i][0] + a * v * t_release
-        # print(pos_release, a)
-        # # print("爆点坐标无z",pos_detonate, "v", v, "t", t_release+t_detonate, "a", a)
-        # pos_detonate = init_as[i][0] + a * v * (t_detonate+t_release)
-        # pos_detonate[2] = 1800 - 0.5 * g * t_detonate ** 2
-        pos_detonate = reverse_projectile_point(init_as[i][0].copy(), t_detonate, t_release, a, v)
-        # print("爆点坐标有z",pos_detonate[0] , pos_detonate[1], pos_detonate[2],t_release + t_detonate)
-        c = cloud_closure(pos_detonate[0], pos_detonate[1], pos_detonate[2], t_release + t_detonate)
-        timeasd = validity_time_set(m1, target_true_pos, c, t_release + t_detonate)
-        return timeasd
+    # 无人机初始位置
+    fy1_pos = np.array([17800, 0, 1800])
+    fy2_pos = np.array([12000, 1400, 1400])
+    fy3_pos = np.array([6000, -3000, 700])
 
-    def reverse_projectile_point(fy, t0, t1, angle_rad, v_xy):
-        # print(fy, t0, t1, angle_rad, v_xy)
-        g = 9.8
-        total_time = t0 + t1
-        h = 0.5 * g * t0 ** 2
-        pz = fy[2] - h
-        d = v_xy * total_time
-        px = fy[0] + d * np.cos(angle_rad)
-        py = fy[1] + d * np.sin(angle_rad)
-        # print(py, fy[1], d, np.sin(angle_rad), angle_rad)
-        return np.array([px, py, pz])
+    # 目标位置（假设为原点）
+    target_pos = np.array([0, 0, 0])
+
+    # 绘制导弹M1轨迹
+    def plot_missile_trajectory():
+        trajectory_x = np.linspace(m1_pos[0], target_pos[0], 100)
+        trajectory_y = np.linspace(m1_pos[1], target_pos[1], 100)
+        trajectory_z = np.linspace(m1_pos[2], target_pos[2], 100)
+
+        ax.plot(trajectory_x, trajectory_y, trajectory_z,
+                color='red', linestyle='-', linewidth=3, alpha=0.8, label='导弹M1轨迹')
+
+        # 导弹起始点
+        ax.scatter(m1_pos[0], m1_pos[1], m1_pos[2],
+                   color='red', s=300, marker='^', alpha=1.0, label='导弹M1')
+
+    # 绘制无人机位置和航线
+    def plot_drones():
+        drones = [
+            (fy1_pos, 'orange', 'FY1'),
+            (fy2_pos, 'purple', 'FY2'),
+            (fy3_pos, 'green', 'FY3')
+        ]
+
+        for pos, color, label in drones:
+            ax.scatter(pos[0], pos[1], pos[2],
+                       color=color, s=200, marker='o', alpha=1.0, label=label)
 
 
-    def angle_to_unit_vector_as(a, deg=True):
-        if deg:
-            a = np.deg2rad(a)
 
-        # 基准向量：x 轴
-        base = np.array([1.0, 0.0, 0.0])
+    # 绘制烟雾弹投放示例（基于优化结果）
+    def plot_smoke_deployment():
+        # 这里使用示例参数，您可以根据实际优化结果调整
+        smoke_params = [
+            # (无人机位置, 投放时间, 引爆时间, 角度, 速度, 颜色, 标签)
+            (fy1_pos, 5.0, 3.0, np.deg2rad(0), 120, 'orange', 'FY1烟雾弹'),
+            (fy2_pos, 8.0, 2.5, np.deg2rad(-30), 130, 'purple', 'FY2烟雾弹'),
+            (fy3_pos, 12.0, 3.2, np.deg2rad(45), 110, 'green', 'FY3烟雾弹')
+        ]
 
-        # 绕 z 轴旋转矩阵（右手系，顺时针即负角度）
-        cos = np.cos(-a)
-        sin = np.sin(-a)
-        Rz = np.array([[cos, -sin, 0],
-                       [sin, cos, 0],
-                       [0, 0, 1]])
+        for drone_pos, drop_t, detonate_t, angle, speed, color, label in smoke_params:
+            # 计算投放点
+            d_release = speed * drop_t
+            delta_xy = np.array([np.cos(angle), np.sin(angle)]) * d_release
+            drop_point = drone_pos.copy()
+            drop_point[0] += delta_xy[0]
+            drop_point[1] += delta_xy[1]
 
-        e = Rz @ base  # 旋转后的向量
-        return e / np.linalg.norm(e)
-
-
-    def angle_to_unit_vector(p, fy):
-        fy_ = np.array([fy[0], fy[1]])
-        p_ = np.array([p[0], p[1]])
-        # print(p_, fy_)
-        fy_to_p = p_ - fy_
-        angle_rad = np.arctan2(fy_to_p[1], fy_to_p[0])
-        if angle_rad < 0:
-            angle_rad += 2 * np.pi
-        return angle_rad
-
-
-    def flat_projectile_time(p, fy, t):
-        h = fy[2] - p[2]
-        t0 = np.sqrt(2 * h / 9.8)
-        t1 = t - t0
-        # print(t1, t0, t)
-        return t1, t0
+            # 计算爆点
+            g = 9.8
+            total_time = drop_t + detonate_t
+            h = 0.5 * g * detonate_t ** 2
+            blast_point = drop_point.copy()
+            blast_point[2] -= h
+            blast_point[0] += np.cos(angle) * speed * detonate_t
+            blast_point[1] += np.sin(angle) * speed * detonate_t
 
 
-    class Optimization:
-        def __init__(self):
-            self.history = []
-            self.params_history = []
-            self.best_history = []
-            self.best_params_history = []
-            self.best_value = float('inf')
-            self.best_params = None
 
-        def __call__(self, x, f, accepted):
-            self.history.append(f)
-            self.params_history.append(x.copy())
+            # 标记点
+            ax.scatter(drop_point[0], drop_point[1], drop_point[2],
+                       color=color, s=150, marker='D', alpha=1.0, label=f'{label}投放点')
+            ax.scatter(blast_point[0], blast_point[1], blast_point[2],
+                       color='red', s=120, marker='*', alpha=1.0, label=f'{label}爆点')
 
-            if f < self.best_value:
-                self.best_value = f
-                self.best_params = x.copy()
+            # 绘制烟雾云团（简化表示）
+            u = np.linspace(0, 2 * np.pi, 20)
+            v = np.linspace(0, np.pi, 20)
+            x = blast_point[0] + 100 * np.outer(np.cos(u), np.sin(v))
+            y = blast_point[1] + 100 * np.outer(np.sin(u), np.sin(v))
+            z = blast_point[2] + 100 * np.outer(np.ones(np.size(u)), np.cos(v))
 
-            self.best_history.append(self.best_value)
-            self.best_params_history.append(self.best_params.copy())
+            ax.plot_wireframe(x, y, z, color=color, alpha=0.3)
 
-            if len(self.history) % 100 == 0:
-                print(f"Iteration: {len(self.history)}:Current value: {-f:.4f}, Best Value: {-self.best_value:.4f}{x}")
+    # 绘制目标区域
+    def plot_target_area():
+        # 绘制目标点
+        ax.scatter(target_pos[0], target_pos[1], target_pos[2],
+                   color='black', s=400, marker='X', alpha=1.0, label='目标点')
 
 
-    angle = angle_to_unit_vector(init_as[i][2].copy(), init_as[i][0].copy())
-    t_release, t_detonate = flat_projectile_time(init_as[i][2].copy(), init_as[i][0].copy(), init_as[i][3].copy())
-    # print([angle, init_as[i][1].copy(), t_release, t_detonate])
-    bounds = [(0, 2 * np.pi * 10), (70, 140), (0, 500), (0, 50)]
-    initial_params = np.array([angle * 10, init_as[i][1].copy(), t_release * 10, t_detonate * 10])
-    tracker = Optimization()
 
-    print("开始模拟退火...")
-    minimizer_kwargs = {
-        "method": "L-BFGS-B",
-        "bounds": bounds,
-        "options": {"maxiter": 100}
-    }
+    # 执行绘图
+    plot_missile_trajectory()
+    plot_drones()
+    plot_smoke_deployment()
+    plot_target_area()
 
-    result_sa = basinhopping(
-        objective,
-        initial_params,
-        niter=1000,
-        minimizer_kwargs=minimizer_kwargs,
-        stepsize=0.5,
-        accept_test=None,
-        callback=tracker,
-    )
+    # 设置坐标轴标签
+    ax.set_xlabel('X坐标 (m)', fontsize=14, labelpad=15)
+    ax.set_ylabel('Y坐标 (m)', fontsize=14, labelpad=15)
+    ax.set_zlabel('Z坐标 (m)', fontsize=14, labelpad=15)
+    ax.set_title('问题4：FY1、FY2、FY3对M1的烟幕干扰三维示意图', fontsize=16, fontweight='bold', pad=20)
 
-    best_params_sa = result_sa.x
-    best_value_sa = -result_sa.fun / 10
-    pos_release, pos_detonate, time = objective_user(best_params_sa)
-    M = np.linalg.norm(pos_detonate - m1(best_params_sa[3]/10))
-    print("\n 模拟退火优化结果")
-    print(f"最佳转向角：{best_params_sa[0]/ 10}")
-    print(f"最佳速度：{best_params_sa[1]}")
-    print(f"最佳投弹时间：{best_params_sa[2]/10}")
-    print(f"最佳投弹点：{pos_release}")
-    print(f"最佳引爆时间：{best_params_sa[3]/10}")
-    print(f"最佳引爆点：{pos_detonate}")
-    print(f"最大有效遮蔽时间： {best_value_sa}")
-    print(f"爆时烟雾与导弹距离：{M}")
-    ji = objective_user_set(best_params_sa)
-    # print(ji)
-    total_effective_shaded_area = total_effective_shaded_area | ji
-print(len(total_effective_shaded_area)/10)
+    # 设置坐标轴范围
+    ax.set_xlim(0, 21000)
+    ax.set_ylim(-3500, 2500)
+    ax.set_zlim(0, 2500)
+
+    # 添加网格
+    ax.grid(True, alpha=0.3)
+
+    # 添加图例（避免重复标签）
+    handles, labels = ax.get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    ax.legend(by_label.values(), by_label.keys(), loc='upper left', bbox_to_anchor=(1.05, 1), fontsize=10)
+
+    # 设置视角
+    ax.view_init(elev=25, azim=45)
+
+    # 调整布局
+    plt.tight_layout()
+
+    # 保存图像
+    plt.savefig('problem4_3d_diagram.png', dpi=300, bbox_inches='tight')
+    plt.savefig('problem4_3d_diagram.pdf', bbox_inches='tight')
+
+    plt.show()
+
+    return fig, ax
+
+
+
+
+
+
+
+
+    plt.show()
+
+
+# 运行绘图
+if __name__ == "__main__":
+    print("开始绘制问题4的三维示意图...")
+    fig_3d, ax_3d = plot_problem4_3d()
+
+
+    print("绘图完成！图像已保存为：")
+    print("- problem4_3d_diagram.png")
+    print("- problem4_3d_diagram.pdf")
+    print("- problem4_2d_views.png")

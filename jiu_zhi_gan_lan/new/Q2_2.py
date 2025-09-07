@@ -111,7 +111,7 @@ while a:
     result_sa = basinhopping(
         objective,
         initial_params,
-        niter=50,
+        niter=200,
         minimizer_kwargs=minimizer_kwargs,
         stepsize=0.5,
         accept_test=None,

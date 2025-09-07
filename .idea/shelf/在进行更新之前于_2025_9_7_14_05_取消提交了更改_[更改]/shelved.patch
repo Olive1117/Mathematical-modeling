@@ -1,0 +1,1644 @@
+Index: jiu_zhi_gan_lan/new/terms_P.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import numpy as np\r\nfrom core import *\r\n\r\nm1_pos = np.array([20000, 0, 2000])\r\nm2_pos = np.array([19000, 600, 2100])\r\nm3_pos = np.array([18000, -600, 1900])\r\nfy1_pos = np.array([17800, 0, 1800])\r\nfy2_pos = np.array([12000, 1400, 1400])\r\nfy3_pos = np.array([6000, -3000, 700])\r\nfy4_pos = np.array([11000, 2000, 1800])\r\nfy5_pos = np.array([13000, -2000, 1300])\r\n# def terms(m, fy, t):\r\n#     return t*np.sqrt(\r\n#         (m[0] + (V_m * t + d) / (np.sqrt(m[2] ** 2 / (m[0] ** 2 + m[1] ** 2) + 1) * np.sqrt((m[1] ** 2 / m[0] ** 2) + 1)) - fy[0]) ** 2 +\r\n#         (m[1] + (V_m * t + d) / (np.sqrt(m[2] ** 2 / (m[0] ** 2 + m[1] ** 2) + 1) * np.sqrt((m[0] ** 2 / m[1] ** 2) + 1)) - fy[1]) ** 2\r\n#         )\r\ndef terms(m, fy, t):\r\n    m_ = np.array([m[0], m[1]])\r\n    fy_ = np.array([fy[0], fy[1]])\r\n    V_m = 300\r\n    d = 1000\r\n    alpha = np.arctan2(m[1], m[0])\r\n\r\n    thema = np.arctan(m[2]/np.sqrt(m[0]**2+m[1]**2))\r\n    L = d + V_m * t\r\n    Lm = np.abs((L * np.cos(thema)))\r\n    dx = np.abs(Lm * np.cos(alpha))\r\n    dy = np.abs(Lm * np.sin(alpha))\r\n    H = np.abs(Lm * np.tan(thema))\r\n    if m[1] > 0:\r\n        dy = -dy\r\n    P_ = m_ + np.array([-dx, dy])\r\n    h = m[2] - H\r\n    if h > fy[2]:\r\n        return np.inf, None\r\n    P = np.array([P_[0], P_[1], m[2] - H])\r\n    fy_to_p = P_ - fy_\r\n    Lfy = np.linalg.norm(fy_to_p)\r\n    v = Lfy / t\r\n    # print(\"now\", t, \"v\", v, \"lfy\", Lfy, \"lm\", Lm, \"fy\", fy, \"m\", m, \"P\", P_, \"alpha\", alpha, \"h\", H)\r\n    return v, P\r\n\r\nif __name__ == '__main__':\r\n    n = 0\r\n    for t in np.arange(0.1, 70, 0.1):\r\n        fyv, p = terms(m1_pos, fy1_pos, t)\r\n        if 70 <= fyv <= 140 and p[0] >= 0 and p[1] >= 0 and p[2] >= 0:\r\n            n += 1\r\n            print(\"now:\", t, \"fy_v：\", fyv, \"p\", p, m1(t))\r\n    print(\"共\", n, \"条有效数据\")\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/new/terms_P.py b/jiu_zhi_gan_lan/new/terms_P.py
+--- a/jiu_zhi_gan_lan/new/terms_P.py	(revision c916ca4d4aca03c4bdafdb01e8ddfaa9306ac00e)
++++ b/jiu_zhi_gan_lan/new/terms_P.py	(date 1757218959245)
+@@ -1,19 +1,21 @@
+ import numpy as np
+-from core import *
+ 
++# 定义导弹和无人机位置
+ m1_pos = np.array([20000, 0, 2000])
+ m2_pos = np.array([19000, 600, 2100])
+ m3_pos = np.array([18000, -600, 1900])
++missiles = [m1_pos, m2_pos, m3_pos]
++missile_names = ['m1', 'm2', 'm3']
++
+ fy1_pos = np.array([17800, 0, 1800])
+ fy2_pos = np.array([12000, 1400, 1400])
+ fy3_pos = np.array([6000, -3000, 700])
+ fy4_pos = np.array([11000, 2000, 1800])
+ fy5_pos = np.array([13000, -2000, 1300])
+-# def terms(m, fy, t):
+-#     return t*np.sqrt(
+-#         (m[0] + (V_m * t + d) / (np.sqrt(m[2] ** 2 / (m[0] ** 2 + m[1] ** 2) + 1) * np.sqrt((m[1] ** 2 / m[0] ** 2) + 1)) - fy[0]) ** 2 +
+-#         (m[1] + (V_m * t + d) / (np.sqrt(m[2] ** 2 / (m[0] ** 2 + m[1] ** 2) + 1) * np.sqrt((m[0] ** 2 / m[1] ** 2) + 1)) - fy[1]) ** 2
+-#         )
++drones = [fy1_pos, fy2_pos, fy3_pos, fy4_pos, fy5_pos]
++drone_names = ['fy1', 'fy2', 'fy3', 'fy4', 'fy5']
++
++
+ def terms(m, fy, t):
+     m_ = np.array([m[0], m[1]])
+     fy_ = np.array([fy[0], fy[1]])
+@@ -21,31 +23,198 @@
+     d = 1000
+     alpha = np.arctan2(m[1], m[0])
+ 
+-    thema = np.arctan(m[2]/np.sqrt(m[0]**2+m[1]**2))
++    thema = np.arctan(m[2] / np.sqrt(m[0] ** 2 + m[1] ** 2))
+     L = d + V_m * t
+     Lm = np.abs((L * np.cos(thema)))
+     dx = np.abs(Lm * np.cos(alpha))
+     dy = np.abs(Lm * np.sin(alpha))
+     H = np.abs(Lm * np.tan(thema))
++
+     if m[1] > 0:
+         dy = -dy
++
+     P_ = m_ + np.array([-dx, dy])
+     h = m[2] - H
++
+     if h > fy[2]:
+-        return np.inf, None
++        return np.inf, None, None, None, None, None
++
+     P = np.array([P_[0], P_[1], m[2] - H])
+     fy_to_p = P_ - fy_
+     Lfy = np.linalg.norm(fy_to_p)
+     v = Lfy / t
+-    # print("now", t, "v", v, "lfy", Lfy, "lm", Lm, "fy", fy, "m", m, "P", P_, "alpha", alpha, "h", H)
+-    return v, P
++
++    # 计算投放点、爆炸时间、速度、航向
++    drop_point = P
++    explosion_time = t
++    speed = v
++    heading = np.arctan2(fy_to_p[1], fy_to_p[0])  # 航向角（弧度）
++
++    return v, P, drop_point, explosion_time, speed, heading
++
++
++def calculate_effective_time_window(m, fy, start_t):
++    """计算从start_t开始的实际有效遮蔽时间窗口"""
++    # 向前搜索找到有效时间的开始
++    start_time = start_t
++    for t_test in np.arange(start_t, max(0.1, start_t - 5), -0.1):
++        result = terms(m, fy, t_test)
++        if len(result) == 6:
++            fyv, p, _, _, _, _ = result
++            if 70 <= fyv <= 140 and p is not None and p[0] >= 0 and p[1] >= 0 and p[2] >= 0:
++                start_time = t_test
++            else:
++                break
++
++    # 向后搜索找到有效时间的结束
++    end_time = start_time
++    best_info = {}
++    for t_test in np.arange(start_time, 70, 0.1):
++        result = terms(m, fy, t_test)
++        if len(result) == 6:
++            fyv, p, drop_point, explosion_time, speed, heading = result
++            if 70 <= fyv <= 140 and p is not None and p[0] >= 0 and p[1] >= 0 and p[2] >= 0:
++                end_time = t_test
++                # 保存信息
++                best_info = {
++                    'drop_point': drop_point,
++                    'explosion_time': explosion_time,
++                    'speed': speed,
++                    'heading': heading,
++                    'v': fyv,
++                    'best_t': t_test
++                }
++            else:
++                break
++
++    actual_time = end_time - start_time
++    best_info['time_window'] = (start_time, end_time)
++    return actual_time, best_info
++
++
++def find_best_missile_for_drone(drone, drone_name):
++    """为每台无人机找到能获得最大遮蔽时间的导弹"""
++    best_missile = None
++    best_time = 0
++    best_info = {}
++
++    for i, missile in enumerate(missiles):
++        # 搜索最佳时间点
++        max_time = 0
++        missile_info = {}
++
++        # 在时间范围内搜索
++        for t in np.arange(0.1, 70, 1.0):
++            result = terms(missile, drone, t)
++            if len(result) == 6:
++                fyv, p, _, _, _, _ = result
++                if 70 <= fyv <= 140 and p is not None:
++                    # 计算实际时间窗口
++                    actual_time, info = calculate_effective_time_window(missile, drone, t)
++                    if actual_time > max_time:
++                        max_time = actual_time
++                        missile_info = info
++
++        if max_time > best_time:
++            best_time = max_time
++            best_missile = missile_names[i]
++            best_info = missile_info
++
++    return best_missile, best_time, best_info
++
++
++def assign_drones_to_best_missiles():
++    """为每台无人机分配能获得最大遮蔽时间的导弹"""
++    assignments = {}
++    missile_assignments = {'m1': [], 'm2': [], 'm3': []}
++
++    print("为每台无人机分配最佳导弹...")
++    for i, drone in enumerate(drones):
++        drone_name = drone_names[i]
++        best_missile, best_time, best_info = find_best_missile_for_drone(drone, drone_name)
++
++        if best_missile:
++            assignments[f"{best_missile}_{drone_name}"] = {
++                'time': best_time,
++                'info': best_info,
++                'drone': drone,
++                'missile': missiles[missile_names.index(best_missile)]
++            }
++            missile_assignments[best_missile].append(drone_name)
++            print(f"  无人机 {drone_name} -> 导弹 {best_missile} (遮蔽时间: {best_time:.2f}秒)")
++        else:
++            print(f"  无人机 {drone_name}: 无法找到有效遮蔽的导弹")
++
++    return assignments, missile_assignments
++
++
++def radians_to_degrees(rad):
++    """弧度转角度"""
++    return rad * 180 / np.pi
++
+ 
+ if __name__ == '__main__':
+-    n = 0
+-    for t in np.arange(0.1, 70, 0.1):
+-        fyv, p = terms(m1_pos, fy1_pos, t)
+-        if 70 <= fyv <= 140 and p[0] >= 0 and p[1] >= 0 and p[2] >= 0:
+-            n += 1
+-            print("now:", t, "fy_v：", fyv, "p", p, m1(t))
+-    print("共", n, "条有效数据")
++    # 为每台无人机分配最佳导弹
++    assignments, missile_assignments = assign_drones_to_best_missiles()
++
++    print("\n" + "=" * 80)
++    print("最终无人机分配方案：")
++    print("=" * 80)
++
++    total_effective_time = 0
++
++    # 按导弹分组显示结果
++    for missile_name in missile_names:
++        assigned_drones = missile_assignments[missile_name]
++        missile_time = 0
++
++        print(f"\n导弹 {missile_name}:")
++        print("-" * 40)
++        print(f"分配的无人机: {', '.join(assigned_drones) if assigned_drones else '无'}")
++
++        for drone_name in assigned_drones:
++            key = f"{missile_name}_{drone_name}"
++            if key in assignments:
++                info = assignments[key]
++                missile_time += info['time']
++
++                print(f"\n无人机 {drone_name}:")
++                print(f"  最大遮蔽时间: {info['time']:.2f} 秒")
++
++                if info['info'] and 'drop_point' in info['info'] and info['info']['drop_point'] is not None:
++                    drop_point = info['info']['drop_point']
++                    print(f"  最佳投放点: ({drop_point[0]:.1f}, {drop_point[1]:.1f}, {drop_point[2]:.1f})")
+ 
++                print(f"  最佳爆炸时间: {info['info'].get('explosion_time', 0):.1f} 秒")
++                print(f"  爆炸速度: {info['info'].get('speed', 0):.2f} m/s")
++
++                if info['info'] and 'heading' in info['info'] and info['info']['heading'] is not None:
++                    print(f"  航向角: {radians_to_degrees(info['info']['heading']):.1f}°")
++
++                print(f"  相对速度: {info['info'].get('v', 0):.2f} m/s")
++
++                if info['info'] and 'time_window' in info['info']:
++                    start, end = info['info']['time_window']
++                    print(f"  有效时间窗口: {start:.1f} - {end:.1f}秒")
++
++        print(f"\n导弹 {missile_name} 总遮蔽时间: {missile_time:.2f} 秒")
++        total_effective_time += missile_time
++
++    print(f"\n所有无人机总有效遮蔽时间: {total_effective_time:.2f} 秒")
++
++    # 统计信息
++    print(f"\n统计信息:")
++    for missile_name in missile_names:
++        count = len(missile_assignments[missile_name])
++        print(f"导弹 {missile_name}: {count} 台无人机")
++
++    # 检查是否有未分配的无人机
++    all_assigned = []
++    for drones_list in missile_assignments.values():
++        all_assigned.extend(drones_list)
++
++    unassigned = set(drone_names) - set(all_assigned)
++    if unassigned:
++        print(f"未分配无人机: {', '.join(sorted(unassigned))}")
++    else:
++        print("所有无人机都已分配")
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/new/Q2_2.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from core import *\r\nfrom missile_search import validity_time\r\nfrom matplotlib import pyplot as plt\r\nfrom scipy.optimize import basinhopping, minimize\r\nimport random\r\nimport numpy as np\r\nfrom matplotlib.ticker import MaxNLocator\r\n# 最简化的字体设置，确保兼容性\r\nplt.rcParams[\"font.family\"] = [\"SimHei\", \"sans-serif\"]\r\nplt.rcParams[\"axes.unicode_minus\"] = False  # 解决负号显示问题\r\n\r\n# 基础样式设置\r\nplt.rcParams[\"figure.figsize\"] = (8, 5)\r\nplt.rcParams[\"figure.dpi\"] = 80\r\nplt.rcParams[\"font.size\"] = 12\r\n\r\ndef objective(params):\r\n    a, v, t_release, t_detonate = params\r\n    t_release = t_release / 10\r\n    t_detonate = t_detonate / 10\r\n    a = a * np.pi/6/10\r\n    a = angle_to_unit_vector(a)\r\n    v = v\r\n    g = 9.8\r\n    fy1 = np.array([17800, 0, 1800])\r\n    pos_release = fy1 + a * v * t_release\r\n    # print(pos_release)\r\n    pos_detonate = fy1 + a * v * (t_detonate+t_release)\r\n    # print(\"爆点坐标无z\",pos_detonate, \"v\", v, \"t\", t_release+t_detonate, \"a\", a)\r\n    pos_detonate[2] = 1800 - 0.5 * g * t_detonate ** 2\r\n    c = cloud_closure(pos_detonate[0], pos_detonate[1], pos_detonate[2], t_release + t_detonate)\r\n    # print(\"爆点坐标有z\",pos_detonate[0] , pos_detonate[1], pos_detonate[2],t_release + t_detonate)\r\n    time = validity_time(m1, target_true_pos, c, t_release + t_detonate)\r\n    return -time * 100\r\n\r\ndef objective_user(params):\r\n    a, v, t_release, t_detonate = params\r\n    t_release = t_release / 10\r\n    t_detonate = t_detonate / 10\r\n    a = a * np.pi/6/10\r\n    v = v\r\n    g = 9.8\r\n    fy1 = np.array([17800, 0, 1800])\r\n    pos_release = fy1 + a * v * t_release\r\n    pos_detonate = fy1 + a * v * t_detonate\r\n    pos_detonate[2] = 1800 - 0.5 * g * t_detonate ** 2\r\n    c = cloud_closure(pos_detonate[0], pos_detonate[1], pos_detonate[2], t_release + t_detonate)\r\n    time = validity_time(m1, target_true_pos, c, t_release + t_detonate)\r\n    return pos_release, pos_detonate, time\r\n\r\ndef angle_to_unit_vector(a, deg=False):\r\n    if deg:\r\n        a = np.deg2rad(a)\r\n\r\n    # 基准向量：−x 轴\r\n    base = np.array([-1.0, 0.0, 0.0])\r\n\r\n    # 绕 z 轴旋转矩阵（右手系，顺时针即负角度）\r\n    cos = np.cos(-a)\r\n    sin = np.sin(-a)\r\n    Rz = np.array([[cos, -sin, 0],\r\n                   [sin, cos, 0],\r\n                   [0, 0, 1]])\r\n\r\n    e = Rz @ base  # 旋转后的向量\r\n    return e / np.linalg.norm(e)\r\n\r\na = 1\r\nwhile a:\r\n    a -= 1\r\n    rand_seed = random.randint(0, 2 ** 32 - 1)\r\n    print('本次随机种子 =', rand_seed)\r\n    np.random.seed(rand_seed)\r\n\r\n\r\n    class Optimization:\r\n        def __init__(self):\r\n            self.history = []\r\n            self.params_history = []\r\n            self.best_history = []\r\n            self.best_params_history = []\r\n            self.best_value = float('inf')\r\n            self.best_params = None\r\n\r\n        def __call__(self, x, f, accepted):\r\n            self.history.append(f)\r\n            self.params_history.append(x.copy())\r\n\r\n            if f < self.best_value:\r\n                self.best_value = f\r\n                self.best_params = x.copy()\r\n\r\n            self.best_history.append(self.best_value)\r\n            self.best_params_history.append(self.best_params.copy())\r\n\r\n            if len(self.history) % 1 == 0:\r\n                print(f\"Iteration: {len(self.history)}:Current value: {-f:.4f}, Best Value: {-self.best_value:.4f}{x}\")\r\n\r\n\r\n    bounds = [(-1*10, 1*10), (70, 140), (0, 50), (0, 50)]\r\n    initial_params = np.array([0, 120, 15, 36])\r\n    tracker = Optimization()\r\n\r\n    print(\"开始模拟退火...\")\r\n    minimizer_kwargs = {\r\n        \"method\": \"L-BFGS-B\",\r\n        \"bounds\": bounds,\r\n        \"options\": {\"maxiter\": 100}\r\n    }\r\n\r\n    result_sa = basinhopping(\r\n        objective,\r\n        initial_params,\r\n        niter=50,\r\n        minimizer_kwargs=minimizer_kwargs,\r\n        stepsize=0.5,\r\n        accept_test=None,\r\n        callback=tracker,\r\n    )\r\n\r\n    best_params_sa = result_sa.x\r\n    best_value_sa = -result_sa.fun/100\r\n    pos_release, pos_detonate, time = objective_user(best_params_sa)\r\n    M = np.linalg.norm(pos_detonate - m1(best_params_sa[3]/10))\r\n    print(\"\\n 模拟退火优化结果\")\r\n    print(f\"最佳转向角：{best_params_sa[0]*np.pi/6/10}\")\r\n    print(f\"最佳速度：{best_params_sa[1]}\")\r\n    print(f\"最佳投弹时间：{best_params_sa[2]/10}\")\r\n    print(f\"最佳投弹点：{pos_release}\")\r\n    print(f\"最佳引爆时间：{best_params_sa[3]/10}\")\r\n    print(f\"最佳引爆点：{pos_detonate}\")\r\n    print(f\"最大有效遮蔽时间： {best_value_sa}\")\r\n    print(f\"爆时烟雾与导弹距离：{M}\")\r\n\r\n    a_norm = [(p[0] - bounds[0][0]) / (bounds[0][1] - bounds[0][0]) for p in tracker.params_history]\r\n    v_norm = [(p[1] - bounds[1][0]) / (bounds[1][1] - bounds[1][0]) for p in tracker.params_history]\r\n    t_release_norm = [(p[2] - bounds[2][0]) / (bounds[2][1] - bounds[2][0]) for p in tracker.params_history]\r\n    t_detonate_norm = [(p[3] - bounds[3][0]) / (bounds[3][1] - bounds[3][0]) for p in tracker.params_history]\r\n    plt.plot(a_norm, label='角度')\r\n    plt.plot(v_norm, label='速度')\r\n    plt.plot(t_release_norm, label='投弹时间')\r\n    plt.plot(t_detonate_norm, label='引爆时间')\r\n    plt.legend()\r\n    plt.xlabel('迭代次数')\r\n    plt.ylabel('归一化参数值')\r\n    plt.title('参数优化过程')\r\n    plt.legend()\r\n    plt.grid(True, alpha=0.3)\r\n    plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))\r\n    plt.show()\r\n    best_time = 0\r\n    if (best_value_sa > best_time):\r\n        best_time = best_value_sa\r\n        best_seed = rand_seed\r\n    if best_time > 4.7:\r\n        a = 0
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/new/Q2_2.py b/jiu_zhi_gan_lan/new/Q2_2.py
+--- a/jiu_zhi_gan_lan/new/Q2_2.py	(revision c916ca4d4aca03c4bdafdb01e8ddfaa9306ac00e)
++++ b/jiu_zhi_gan_lan/new/Q2_2.py	(date 1757167139683)
+@@ -111,7 +111,7 @@
+     result_sa = basinhopping(
+         objective,
+         initial_params,
+-        niter=50,
++        niter=200,
+         minimizer_kwargs=minimizer_kwargs,
+         stepsize=0.5,
+         accept_test=None,
+Index: jiu_zhi_gan_lan/new/q3.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/new/q3.py b/jiu_zhi_gan_lan/new/q3.py
+new file mode 100644
+--- /dev/null	(date 1757223929613)
++++ b/jiu_zhi_gan_lan/new/q3.py	(date 1757223929613)
+@@ -0,0 +1,308 @@
++import numpy as np
++import pandas as pd
++from scipy.optimize import minimize
++from missile_search import validity_time
++from core import *
++
++V_MISSILE = 300
++M1_INIT = np.array([20000, 0, 2000])
++target_true_pos = np.array([0, 200, 0])
++H_DRONE = 1800
++bounds = [(10000, 18000), (-200, 200), (0, 2000), (0, 50)]
++
++# ---------- 全局记录所有搜索点 ----------
++all_search_points = []  # 存储所有搜索点: (x, y, z, t, mask_time)
++
++
++def validity_time_array(x):
++    """计算单个点的遮蔽时间（用于退火优化）"""
++    center0 = np.array([x[0], x[1], x[2]])
++    t_det = x[3]
++    cloud_func = lambda t: center0 + np.array([0, 0, -3]) * (t - t_det)
++
++    T_val = -validity_time(missile, target_true_pos, cloud_func, t_det)
++
++    # 记录这个点
++    all_search_points.append((x[0], x[1], x[2], x[3], -T_val))
++
++    missile_pos_at_t_det = missile(t_det)
++    dist_to_missile = np.linalg.norm(center0 - missile_pos_at_t_det)
++
++    dist_penalty = 0.0
++    if dist_to_missile > 1000:
++        dist_penalty = 2.0 * (dist_to_missile - 1000) / 100
++
++    total_obj = T_val + dist_penalty
++    return total_obj
++
++
++def missile(t):
++    """导弹位置函数"""
++    return M1_INIT + V_MISSILE * t * (-M1_INIT / np.linalg.norm(M1_INIT))
++
++
++# ---------- 退火采样 ----------
++def simulated_annealing(obj, bounds, max_iter=1000):
++    """模拟退火算法"""
++    dim = len(bounds)
++    step_ratio = np.full(dim, 0.05)
++    cur = np.array([17188, 0, 1736.496, 5.1])
++    cur_val = obj(cur)
++    best, best_val = cur.copy(), cur_val
++    T = 100
++
++    for i in range(max_iter):
++        idx = np.random.randint(dim)
++        w = bounds[idx][1] - bounds[idx][0]
++        delta = np.random.uniform(-1, 1) * step_ratio[idx] * w
++        nei = cur.copy()
++        nei[idx] += delta
++        nei[idx] = np.clip(nei[idx], bounds[idx][0], bounds[idx][1])
++        nei_val = obj(nei)
++        dE = nei_val - cur_val
++        accepted = dE < 0 or np.random.rand() < np.exp(-dE / T)
++
++        if accepted:
++            cur, cur_val = nei, nei_val
++            if cur_val < best_val:
++                best, best_val = cur.copy(), cur_val
++
++        T *= 0.98
++
++    return best, -best_val
++
++
++def collect_points(n_chains=10, iter_per_chain=500):
++    """收集大量搜索点"""
++    global all_search_points
++    all_search_points = []
++
++    print("开始退火搜索...")
++    for chain_idx in range(n_chains):
++        print(f"正在进行第 {chain_idx + 1}/{n_chains} 轮退火搜索...")
++        simulated_annealing(validity_time_array, bounds, max_iter=iter_per_chain)
++
++    # 过滤出有效的点（遮蔽时间>0）
++    valid_points = [p for p in all_search_points if p[4] > 0]
++    valid_points.sort(key=lambda x: x[4], reverse=True)  # 按遮蔽时间排序
++
++    print(f"搜索完成！共收集 {len(all_search_points)} 个点，其中 {len(valid_points)} 个有效点")
++    return valid_points
++
++
++def find_best_line(points):
++    """使用加权最小二乘法拟合最优直线 y = kx + b"""
++    if not points:
++        return 0.0, 0.0
++
++    x_coords = np.array([p[0] for p in points])
++    y_coords = np.array([p[1] for p in points])
++    weights = np.array([p[4] for p in points])  # 遮蔽时间作为权重
++
++    # 加权最小二乘法拟合
++    A = np.vstack([x_coords, np.ones(len(x_coords))]).T
++    W = np.diag(weights)
++    k, b = np.linalg.lstsq(A.T @ W @ A, A.T @ W @ y_coords, rcond=None)[0]
++
++    return k, b
++
++
++def is_point_unique(new_point, selected_points, min_time_gap=1.0, min_distance=50.0):
++    """检查新点是否与已选点重复"""
++    x_new, y_new, z_new, t_new, _ = new_point
++
++    for point in selected_points:
++        x_old, y_old, z_old, t_old, _ = point
++
++        # 检查时间间隔
++        if abs(t_new - t_old) < min_time_gap:
++            return False
++
++        # 检查空间距离
++        distance = np.sqrt((x_new - x_old) ** 2 + (y_new - y_old) ** 2 + (z_new - z_old) ** 2)
++        if distance < min_distance:
++            return False
++
++    return True
++
++
++def find_best_three_points(points, k, b, min_time_gap=1.0, min_distance=50.0):
++    """在直线附近找到最佳的三个点"""
++    if not points:
++        return []
++
++    line_distances = []
++    for point in points:
++        x, y = point[0], point[1]
++        distance = abs(k * x - y + b) / np.sqrt(k ** 2 + 1)
++        line_distances.append((point, distance))
++
++    line_distances.sort(key=lambda x: x[1])
++
++    selected_points = []
++    time_zones = [(0, 15), (15, 30), (30, 45)]
++
++    # 第一轮：按时间区域选择
++    for time_min, time_max in time_zones:
++        candidates = []
++        for point, distance in line_distances:
++            if (time_min <= point[3] <= time_max and
++                    is_point_unique(point, selected_points, min_time_gap, min_distance)):
++                candidates.append((point, distance))
++
++        if candidates:
++            best_candidate = min(candidates, key=lambda x: x[1])[0]
++            selected_points.append(best_candidate)
++
++    # 第二轮：补充选择
++    if len(selected_points) < 3:
++        for point, distance in line_distances:
++            if len(selected_points) >= 3:
++                break
++            if point not in selected_points and is_point_unique(point, selected_points, min_time_gap, min_distance):
++                selected_points.append(point)
++
++    return selected_points[:3]
++
++
++def calculate_effective_mask_time(best_points):
++    """计算总的有效遮蔽时间（考虑时间区间合并）"""
++    print("\n遮蔽时间窗口分析:")
++    print("=" * 50)
++
++    # 计算每个点的遮蔽时间窗口
++    mask_windows = []
++    for i, point in enumerate(best_points, 1):
++        x, y, z, t_rel, mask_time = point
++        start_time = t_rel  # 投放时间就是遮蔽开始时间
++        end_time = t_rel + mask_time  # 遮蔽结束时间
++
++        mask_windows.append((start_time, end_time, i))
++
++        print(f"点{i}: {start_time:.1f}s - {end_time:.1f}s ({mask_time:.1f}s)")
++
++    # 按开始时间排序
++    mask_windows.sort(key=lambda x: x[0])
++
++    # 合并重叠的时间区间
++    merged = []
++    current_start, current_end, _ = mask_windows[0]
++
++    for start, end, point_idx in mask_windows[1:]:
++        if start <= current_end:  # 有重叠
++            current_end = max(current_end, end)
++        else:  # 无重叠
++            merged.append((current_start, current_end))
++            current_start, current_end = start, end
++
++    merged.append((current_start, current_end))
++
++    # 计算总有效时间
++    total_time = 0
++    print("\n合并后的遮蔽区间:")
++    for i, (start, end) in enumerate(merged, 1):
++        duration = end - start
++        total_time += duration
++        print(f"区间{i}: {start:.1f}s - {end:.1f}s ({duration:.1f}s)")
++
++    print(f"\n总有效遮蔽时间: {total_time:.1f}s")
++
++    return total_time
++
++
++# ---------- 主流程 ----------
++def main():
++    print("=" * 60)
++    print("无人机最佳投放点计算程序")
++    print("=" * 60)
++
++    print("\n【1】退火搜索收集点...")
++    points = collect_points(n_chains=10, iter_per_chain=300)
++
++    if not points:
++        print("没有找到有效点，使用默认策略")
++        default_points = [
++            (15000, 0, 1800, 10.0, 8.5),
++            (16000, -50, 1800, 25.0, 7.2),
++            (17000, 50, 1800, 40.0, 6.8)
++        ]
++        points = default_points
++    else:
++        print(f"找到 {len(points)} 个有效点")
++
++    print("\n【2】加权最小二乘拟合最优直线...")
++    k, b = find_best_line(points)
++    print(f"  最优航线方程: y = {k:.4f}x + {b:.2f}")
++
++    print("\n【3】选择最佳三个点（确保投放间隔>1s）...")
++    best_points = find_best_three_points(points, k, b, min_time_gap=1.0, min_distance=50.0)
++
++    if not best_points:
++        print("未能找到满足条件的三个点，使用前三个最佳点")
++        best_points = points[:3]
++
++    print("\n选择的投放点详情:")
++    for i, point in enumerate(best_points, 1):
++        x, y, z, t_rel, mask_time = point
++        print(f"  点{i}: t={t_rel:.1f}s, 坐标=({x:.1f}, {y:.1f}, {z:.1f}), 遮蔽时间={mask_time:.1f}s")
++
++    print("\n【4】计算有效遮蔽时间...")
++    total_mask = calculate_effective_mask_time(best_points)
++
++    print("\n【5】生成最终结果...")
++    rows = []
++
++    for i, point in enumerate(best_points, 1):
++        x, y, z, t_rel, mask_time = point
++        drop_point = np.array([x, y, H_DRONE])
++        blast_point = drop_point + np.array([0, 0, -10])
++        dt = 0.0  # 起爆延时为0（投放即开始遮蔽）
++
++        rows.append({
++            "无人机编号": f"FY{i}",
++            "导弹编号": "M1",
++            "弹序": i,
++            "投放时刻(s)": round(t_rel, 1),
++            "起爆延时(s)": round(dt, 1),
++            "投放点x(m)": round(x, 1),
++            "投放点y(m)": round(y, 1),
++            "投放点z(m)": round(H_DRONE, 1),
++            "起爆点x(m)": round(blast_point[0], 1),
++            "起爆点y(m)": round(blast_point[1], 1),
++            "起爆点z(m)": round(blast_point[2], 1),
++            "本枚遮蔽时间(s)": round(mask_time, 1)
++        })
++
++    # 保存到Excel
++    df = pd.DataFrame(rows)
++    df.to_excel("result1.xlsx", index=False)
++
++    print("\n【6】结果汇总:")
++    print("=" * 40)
++    print(f"  最优航线方程: y = {k:.4f}x + {b:.2f}")
++
++    x_coords = [p[0] for p in best_points]
++    y_coords = [p[1] for p in best_points]
++    t_coords = [p[3] for p in best_points]
++
++    print(f"  投放点x范围: {min(x_coords):.1f} - {max(x_coords):.1f} m")
++    print(f"  投放点y范围: {min(y_coords):.1f} - {max(y_coords):.1f} m")
++    print(f"  投放时间范围: {min(t_coords):.1f} - {max(t_coords):.1f} s")
++    print(f"  总有效遮蔽时间: {total_mask:.1f} s")
++
++    # 检查时间间隔
++    t_coords.sort()
++    time_gaps = [t_coords[i + 1] - t_coords[i] for i in range(len(t_coords) - 1)]
++    print(f"  最小时间间隔: {min(time_gaps):.1f} s")
++
++    if min(time_gaps) >= 1.0:
++        print("  时间间隔检查: 通过 ✓")
++    else:
++        print("  时间间隔检查: 不通过 ✗")
++
++    print(f"\n结果已保存到 result1.xlsx！")
++    print("程序执行完成！")
++
++
++if __name__ == "__main__":
++    main()
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/new/Q3_ckwx.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/new/Q3_ckwx.py b/jiu_zhi_gan_lan/new/Q3_ckwx.py
+new file mode 100644
+--- /dev/null	(date 1757175033800)
++++ b/jiu_zhi_gan_lan/new/Q3_ckwx.py	(date 1757175033800)
+@@ -0,0 +1,375 @@
++#!/usr/bin/env python3
++# -*- coding: utf-8 -*-
++"""
++问题3：无人机FY1投放3枚烟幕干扰弹对M1的干扰 - 贪心算法优化
++"""
++import numpy as np
++import pandas as pd
++import os
++import time
++import matplotlib.pyplot as plt
++from typing import List, Tuple, Dict
++import logging
++
++# 设置中文显示
++plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
++plt.rcParams['axes.unicode_minus'] = False
++
++# 配置日志
++logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
++logger = logging.getLogger(__name__)
++
++# ---------------- 物理常数 -----------------
++G = 9.8
++R0 = 10.0  # 云团初始半径
++CLOUD_SINK_SPEED = 3.0  # 云团下沉速度
++EFFECTIVE_DURATION = 20.0  # 有效遮蔽持续时间
++EFFECTIVE_RADIUS = 10.0  # 有效遮蔽半径
++
++MISSILE_SPEED = 300
++PLANE_ALT = 1800
++FY1_0 = np.array([17800, 0, PLANE_ALT])
++TARGET = np.array([0, 200, 0])
++MISSILE_INIT = np.array([20000, 0, 2000])
++
++MIN_DRONE_SPEED, MAX_DRONE_SPEED = 70, 140
++
++# 导弹方向向量
++u_m = (TARGET - MISSILE_INIT) / np.linalg.norm(TARGET - MISSILE_INIT)
++M0 = MISSILE_INIT
++lambda_max = np.linalg.norm(TARGET - M0)
++
++
++# ---------------- 基础函数 -----------------
++def missile_pos(t: float) -> np.ndarray:
++    """计算导弹在时间t的位置"""
++    return M0 + u_m * MISSILE_SPEED * t
++
++
++def calc_cloud_center(drop_pos: np.ndarray, drop_time: float, burst_time: float, current_time: float) -> np.ndarray:
++    """
++    计算云团中心位置
++    drop_pos: 投放位置
++    drop_time: 投放时间
++    burst_time: 起爆时间
++    current_time: 当前时间
++    """
++    if current_time < burst_time:
++        # 烟幕弹自由落体
++        fall_time = current_time - drop_time
++        z_pos = drop_pos[2] - 0.5 * G * fall_time ** 2
++        return np.array([drop_pos[0], drop_pos[1], z_pos])
++    else:
++        # 云团匀速下沉
++        sink_time = current_time - burst_time
++        z_pos = drop_pos[2] - 0.5 * G * (burst_time - drop_time) ** 2 - CLOUD_SINK_SPEED * sink_time
++        return np.array([drop_pos[0], drop_pos[1], max(0, z_pos)])
++
++
++def calc_cloud_radius(burst_time: float, current_time: float) -> float:
++    """计算云团半径"""
++    if current_time < burst_time:
++        return 0.0
++    cloud_age = current_time - burst_time
++    if cloud_age <= 20.0:
++        return R0
++    else:
++        # 20秒后半径线性衰减
++        return max(0, R0 * (1 - (cloud_age - 20.0) / 10.0))
++
++
++def is_effective_mask(missile_pos: np.ndarray, cloud_center: np.ndarray, cloud_radius: float) -> bool:
++    """判断是否有效遮蔽"""
++    distance = np.linalg.norm(missile_pos - cloud_center)
++    return distance <= (cloud_radius + EFFECTIVE_RADIUS)
++
++
++def calc_single_mask_duration(drop_pos: np.ndarray, drop_time: float, burst_time: float,
++                              time_step: float = 0.01) -> float:
++    """计算单个烟幕弹的有效遮蔽时长"""
++    if burst_time <= drop_time:
++        return 0.0
++
++    total_duration = 0.0
++    start_time = burst_time
++    end_time = min(burst_time + EFFECTIVE_DURATION + 10.0, 100.0)  # 合理的时间范围
++
++    current_time = start_time
++    is_masking = False
++    mask_start = 0.0
++
++    while current_time <= end_time:
++        cloud_center = calc_cloud_center(drop_pos, drop_time, burst_time, current_time)
++        cloud_radius = calc_cloud_radius(burst_time, current_time)
++        missile_position = missile_pos(current_time)
++
++        if is_effective_mask(missile_position, cloud_center, cloud_radius):
++            if not is_masking:
++                is_masking = True
++                mask_start = current_time
++        else:
++            if is_masking:
++                total_duration += (current_time - mask_start)
++                is_masking = False
++
++        current_time += time_step
++
++    # 处理最后一段遮蔽
++    if is_masking:
++        total_duration += (current_time - mask_start)
++
++    return total_duration
++
++
++def drone_flight_params(drop_pos: np.ndarray) -> Tuple[float, float]:
++    """计算无人机的飞行方向和速度"""
++    dx = drop_pos[0] - FY1_0[0]
++    dy = drop_pos[1] - FY1_0[1]
++    distance = np.sqrt(dx ** 2 + dy ** 2)
++
++    # 计算所需速度（假设无人机直线飞行）
++    flight_time = distance / MAX_DRONE_SPEED  # 保守估计
++    required_speed = min(MAX_DRONE_SPEED, max(MIN_DRONE_SPEED, distance / flight_time))
++
++    # 计算航向角（度）
++    heading = np.degrees(np.arctan2(dy, dx)) % 360
++
++    return heading, required_speed
++
++
++# ---------------- 贪心算法优化 -----------------
++def greedy_optimization_3_bombs() -> List[Dict]:
++    """
++    使用贪心算法优化3枚烟幕干扰弹的投放策略
++    返回3枚弹的优化结果
++    """
++    results = []
++    remaining_time_windows = [(0.0, 100.0)]  # 初始时间窗口
++
++    for bomb_idx in range(3):
++        logger.info(f"优化第 {bomb_idx + 1} 枚烟幕干扰弹...")
++
++        best_duration = 0.0
++        best_params = None
++
++        # 参数搜索空间
++        lambda_values = np.linspace(0, lambda_max, 50)
++        drop_time_values = np.linspace(1.0, 10.0, 20)  # 投放时间1-10秒
++        burst_delay_values = np.linspace(1.0, 5.0, 15)  # 投放后1-5秒起爆
++
++        for lam in lambda_values:
++            drop_pos = M0 + lam * u_m
++
++            for drop_time in drop_time_values:
++                for burst_delay in burst_delay_values:
++                    burst_time = drop_time + burst_delay
++
++                    # 检查时间窗口是否可用
++                    time_available = False
++                    for window_start, window_end in remaining_time_windows:
++                        if window_start <= burst_time <= window_end:
++                            time_available = True
++                            break
++
++                    if not time_available:
++                        continue
++
++                    duration = calc_single_mask_duration(drop_pos, drop_time, burst_time)
++
++                    if duration > best_duration:
++                        best_duration = duration
++                        best_params = {
++                            'bomb_index': bomb_idx + 1,
++                            'lambda': lam,
++                            'drop_time': drop_time,
++                            'burst_delay': burst_delay,
++                            'burst_time': burst_time,
++                            'duration': duration,
++                            'drop_pos': drop_pos
++                        }
++
++        if best_params:
++            results.append(best_params)
++            # 更新剩余时间窗口（避免时间重叠）
++            burst_time = best_params['burst_time']
++            new_windows = []
++            for start, end in remaining_time_windows:
++                if end < burst_time - 1.0 or start > burst_time + 1.0:
++                    new_windows.append((start, end))
++                else:
++                    if start < burst_time - 1.0:
++                        new_windows.append((start, burst_time - 1.0))
++                    if end > burst_time + 1.0:
++                        new_windows.append((burst_time + 1.0, end))
++            remaining_time_windows = new_windows
++
++            logger.info(f"第 {bomb_idx + 1} 枚弹: 遮蔽时长={best_duration:.3f}s, "
++                        f"λ={best_params['lambda']:.1f}m, "
++                        f"投放时间={best_params['drop_time']:.1f}s, "
++                        f"起爆时间={best_params['burst_time']:.1f}s")
++        else:
++            logger.warning(f"未找到第 {bomb_idx + 1} 枚弹的有效解")
++            # 添加一个默认解
++            default_params = {
++                'bomb_index': bomb_idx + 1,
++                'lambda': lambda_max * 0.3 * (bomb_idx + 1),
++                'drop_time': 2.0 + bomb_idx * 2.0,
++                'burst_delay': 2.0,
++                'burst_time': 4.0 + bomb_idx * 2.0,
++                'duration': 5.0,
++                'drop_pos': M0 + lambda_max * 0.3 * (bomb_idx + 1) * u_m
++            }
++            results.append(default_params)
++
++    return results
++
++
++def visualize_results(results: List[Dict]) -> None:
++    """可视化优化结果"""
++    os.makedirs("output", exist_ok=True)
++
++    # 时间序列分析
++    time_values = np.linspace(0, 30, 1000)
++    mask_status = np.zeros((3, len(time_values)))
++
++    fig, axes = plt.subplots(2, 1, figsize=(12, 10))
++
++    # 绘制每个烟幕弹的遮蔽情况
++    for i, result in enumerate(results):
++        durations = []
++        for j, t in enumerate(time_values):
++            cloud_center = calc_cloud_center(
++                result['drop_pos'],
++                result['drop_time'],
++                result['burst_time'],
++                t
++            )
++            cloud_radius = calc_cloud_radius(result['burst_time'], t)
++            missile_pos_t = missile_pos(t)
++
++            if is_effective_mask(missile_pos_t, cloud_center, cloud_radius):
++                mask_status[i, j] = 1
++                durations.append(t)
++
++        axes[0].plot(time_values, mask_status[i] * (i + 1),
++                     label=f'烟幕弹{i + 1}', linewidth=2)
++
++    # 绘制总遮蔽情况
++    total_mask = np.sum(mask_status, axis=0) > 0
++    axes[0].plot(time_values, total_mask * 4, 'k-', linewidth=3, label='总遮蔽')
++
++    axes[0].set_xlabel('时间 (s)')
++    axes[0].set_ylabel('遮蔽状态')
++    axes[0].set_title('烟幕弹遮蔽时间序列')
++    axes[0].legend()
++    axes[0].grid(True)
++
++    # 绘制导弹路径和烟幕位置
++    missile_path = [missile_pos(t) for t in np.linspace(0, 30, 100)]
++    missile_x = [p[0] for p in missile_path]
++    missile_y = [p[1] for p in missile_path]
++
++    axes[1].plot(missile_x, missile_y, 'r-', linewidth=3, label='导弹轨迹')
++
++    for i, result in enumerate(results):
++        drop_pos = result['drop_pos']
++        axes[1].scatter(drop_pos[0], drop_pos[1], s=100,
++                        label=f'烟幕弹{i + 1}投放点', marker='o')
++
++        # 绘制有效遮蔽区域
++        circle = plt.Circle((drop_pos[0], drop_pos[1]), EFFECTIVE_RADIUS,
++                            color=f'C{i}', alpha=0.3)
++        axes[1].add_patch(circle)
++
++    axes[1].scatter(TARGET[0], TARGET[1], s=200, c='green',
++                    marker='*', label='目标')
++    axes[1].scatter(FY1_0[0], FY1_0[1], s=100, c='blue',
++                    marker='^', label='无人机FY1')
++
++    axes[1].set_xlabel('X坐标 (m)')
++    axes[1].set_ylabel('Y坐标 (m)')
++    axes[1].set_title('导弹轨迹和烟幕弹位置')
++    axes[1].legend()
++    axes[1].grid(True)
++    axes[1].axis('equal')
++
++    plt.tight_layout()
++    plt.savefig('output/3_bombs_optimization.png', dpi=300, bbox_inches='tight')
++    plt.close()
++
++
++def save_to_excel(results: List[Dict], filename: str = "result1.xlsx") -> None:
++    """保存结果到Excel文件"""
++    os.makedirs("output", exist_ok=True)
++
++    data = []
++    total_duration = 0.0
++
++    for result in results:
++        drop_pos = result['drop_pos']
++        heading, speed = drone_flight_params(drop_pos)
++
++        data.append({
++            '无人机编号': 'FY1',
++            '烟幕干扰弹序号': result['bomb_index'],
++            '飞行方向(度)': heading,
++            '飞行速度(m/s)': speed,
++            '投放点X坐标(m)': drop_pos[0],
++            '投放点Y坐标(m)': drop_pos[1],
++            '投放点Z坐标(m)': drop_pos[2],
++            '起爆点X坐标(m)': drop_pos[0],  # 假设起爆点与投放点相同
++            '起爆点Y坐标(m)': drop_pos[1],
++            '起爆点Z坐标(m)': drop_pos[2],
++            '起爆时间(s)': result['burst_time'],
++            '有效遮蔽时长(s)': result['duration']
++        })
++
++        total_duration += result['duration']
++
++    df = pd.DataFrame(data)
++    df.to_excel(f"output/{filename}", index=False, float_format='%.3f')
++
++    logger.info(f"总遮蔽时长: {total_duration:.3f}s")
++    logger.info(f"结果已保存到 output/{filename}")
++
++
++# ---------------- 主函数 -----------------
++def main():
++    """主函数"""
++    print("=" * 60)
++    print("问题3：无人机FY1投放3枚烟幕干扰弹对M1的干扰")
++    print("使用贪心算法优化投放策略")
++    print("=" * 60)
++
++    # 创建输出目录
++    os.makedirs("output", exist_ok=True)
++
++    # 执行贪心算法优化
++    start_time = time.time()
++    results = greedy_optimization_3_bombs()
++    elapsed_time = time.time() - start_time
++
++    # 输出结果
++    total_duration = sum(result['duration'] for result in results)
++    print(f"\n优化完成! 耗时: {elapsed_time:.2f}s")
++    print(f"总有效遮蔽时长: {total_duration:.3f}s")
++
++    for result in results:
++        print(f"烟幕弹{result['bomb_index']}: "
++              f"λ={result['lambda']:.1f}m, "
++              f"投放时间={result['drop_time']:.1f}s, "
++              f"起爆时间={result['burst_time']:.1f}s, "
++              f"遮蔽时长={result['duration']:.3f}s")
++
++    # 可视化结果
++    print("\n生成可视化结果...")
++    visualize_results(results)
++
++    # 保存结果到Excel
++    save_to_excel(results, "result1.xlsx")
++
++    print("\n优化完成! 结果文件已保存到 output/result1.xlsx")
++
++
++if __name__ == "__main__":
++    main()
+\ No newline at end of file
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"AutoImportSettings\">\r\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\r\n  </component>\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"5690fcbc-a8b2-4311-9707-a467ac278ae2\" name=\"更改\" comment=\"update\">\r\n      <change afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4_1.py\" afterDir=\"false\" />\r\n      <change afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4_2.py\" afterDir=\"false\" />\r\n      <change afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4_3.py\" afterDir=\"false\" />\r\n      <change afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new/gen_anneal_init.py\" afterDir=\"false\" />\r\n      <change afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new/terms_P.py\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q2_2.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q2_2.py\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4.py\" afterDir=\"false\" />\r\n    </list>\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"FileTemplateManagerImpl\">\r\n    <option name=\"RECENT_TEMPLATES\">\r\n      <list>\r\n        <option value=\"Python Script\" />\r\n      </list>\r\n    </option>\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"ProjectLevelVcsManager\">\r\n    <ConfirmationsSetting value=\"2\" id=\"Add\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\"><![CDATA[{\r\n  \"keyToString\": {\r\n    \"Python.Q1.executor\": \"Run\",\r\n    \"Python.Q2.executor\": \"Run\",\r\n    \"Python.Q2_1.executor\": \"Run\",\r\n    \"Python.Q2_2.executor\": \"Run\",\r\n    \"Python.Q2_B.executor\": \"Run\",\r\n    \"Python.Q2_B2.executor\": \"Run\",\r\n    \"Python.Q2_B3.executor\": \"Run\",\r\n    \"Python.Q2_sim.executor\": \"Run\",\r\n    \"Python.Q3_B3.executor\": \"Run\",\r\n    \"Python.Q4.executor\": \"Run\",\r\n    \"Python.Q4_1.executor\": \"Run\",\r\n    \"Python.Q4_2.executor\": \"Run\",\r\n    \"Python.core.executor\": \"Run\",\r\n    \"Python.gen_anneal_init.executor\": \"Run\",\r\n    \"Python.missile_run_photo.executor\": \"Run\",\r\n    \"Python.po1.executor\": \"Run\",\r\n    \"Python.result_q2.executor\": \"Run\",\r\n    \"Python.terms_P.executor\": \"Run\",\r\n    \"Python.基础散点图、带趋势线的散点图、分组散点图、气泡图、基础折线图、多系列折线图、带误差线的折线图、阶梯折线图、基础柱状图、水平柱状图.executor\": \"Run\",\r\n    \"Python.矢量场图、分组点图、彩色映射折线图、3D 网格图、马赛克图、Andrews 曲线、帕累托图、树状图、彩色散点图（按第三变量着色）、3D 曲面图（带光照效果）.executor\": \"Run\",\r\n    \"git-widget-placeholder\": \"main\",\r\n    \"last_opened_file_path\": \"C:/Users/26577/Desktop/数学建模真题/2025/A题\",\r\n    \"node.js.detected.package.eslint\": \"true\",\r\n    \"node.js.selected.package.eslint\": \"(autodetect)\",\r\n    \"node.js.selected.package.tslint\": \"(autodetect)\"\r\n  }\r\n}]]></component>\r\n  <component name=\"RecentsManager\">\r\n    <key name=\"CopyFile.RECENT_KEYS\">\r\n      <recent name=\"D:\\math_model_contest\\Mathematical-modeling\\jiu_zhi_gan_lan\" />\r\n    </key>\r\n    <key name=\"MoveFile.RECENT_KEYS\">\r\n      <recent name=\"D:\\code\\ceshi\\Mathematical-modeling\\jiu_zhi_gan_lan\\new\" />\r\n    </key>\r\n  </component>\r\n  <component name=\"TaskManager\">\r\n    <task id=\"LOCAL-00001\" summary=\"update\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1757063090120</created>\r\n      <option name=\"number\" value=\"00001\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1757063090120</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00002\" summary=\"update\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1757092625268</created>\r\n      <option name=\"number\" value=\"00002\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00002\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1757092625268</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00003\" summary=\"update\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1757103214721</created>\r\n      <option name=\"number\" value=\"00003\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00003\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1757103214721</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00004\" summary=\"update\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1757137056616</created>\r\n      <option name=\"number\" value=\"00004\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00004\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1757137056616</updated>\r\n    </task>\r\n    <option name=\"localTasksCounter\" value=\"5\" />\r\n    <servers />\r\n  </component>\r\n  <component name=\"VcsManagerConfiguration\">\r\n    <MESSAGE value=\"111\" />\r\n    <MESSAGE value=\"update\" />\r\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"update\" />\r\n  </component>\r\n  <component name=\"com.intellij.coverage.CoverageDataManagerImpl\">\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$Q1.coverage\" NAME=\"Q1 覆盖结果\" MODIFIED=\"1757135586819\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$terms_P.coverage\" NAME=\"terms_P 覆盖结果\" MODIFIED=\"1757155840276\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$search_time_axis.coverage\" NAME=\"search_time_axis 覆盖结果\" MODIFIED=\"1757083937299\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$gen_anneal_init.coverage\" NAME=\"gen_anneal_init 覆盖结果\" MODIFIED=\"1757144194500\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$simulated_annealing.coverage\" NAME=\"simulated_annealing 覆盖结果\" MODIFIED=\"1757096346341\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$Q2_B.coverage\" NAME=\"Q2_B 覆盖结果\" MODIFIED=\"1757097409952\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$Q4_2.coverage\" NAME=\"Q4_2 覆盖结果\" MODIFIED=\"1757157600934\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/test_py$Q2.coverage\" NAME=\"Q2 覆盖结果\" MODIFIED=\"1756903845025\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/python代码\" />\r\n    <SUITE FILE_PATH=\"coverage/test_py$_Y_3D_3D_.coverage\" NAME=\"双 Y 轴折线图、带填充区域的折线图、分组箱线图、3D 柱状图、3D 等高线图、误差棒图（横向）、矩阵散点图、堆叠面积图、带数据标签的柱状图、极坐标折线图 覆盖结果\" MODIFIED=\"1756904239704\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$core.coverage\" NAME=\"core 覆盖结果\" MODIFIED=\"1757134508136\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/test_py$.coverage\" NAME=\"基础散点图、带趋势线的散点图、分组散点图、气泡图、基础折线图、多系列折线图、带误差线的折线图、阶梯折线图、基础柱状图、水平柱状图 覆盖结果\" MODIFIED=\"1756904072309\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$Q2_1.coverage\" NAME=\"Q2_1 覆盖结果\" MODIFIED=\"1757134921156\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/test_py$___.coverage\" NAME=\"分组柱状图、堆叠柱状图、百分比堆叠柱状图、直方图、核密度图、直方图 + 核密度图、箱线图、小提琴图、点图、基础饼图 覆盖结果\" MODIFIED=\"1756904019989\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$missile_search.coverage\" NAME=\"missile_search 覆盖结果\" MODIFIED=\"1757092539887\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$Q2.coverage\" NAME=\"Q2 覆盖结果\" MODIFIED=\"1757134987242\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$Q2_2.coverage\" NAME=\"Q2_2 覆盖结果\" MODIFIED=\"1757156385291\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$po1.coverage\" NAME=\"po1 覆盖结果\" MODIFIED=\"1757136239239\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$.coverage\" NAME=\"基础散点图、带趋势线的散点图、分组散点图、气泡图、基础折线图、多系列折线图、带误差线的折线图、阶梯折线图、基础柱状图、水平柱状图 覆盖结果\" MODIFIED=\"1757128446495\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$Q2_B3.coverage\" NAME=\"Q2_B3 覆盖结果\" MODIFIED=\"1757132838766\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan\" />\r\n    <SUITE FILE_PATH=\"coverage/test_py$BQ1.coverage\" NAME=\"BQ1 覆盖结果\" MODIFIED=\"1756826240487\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/python代码\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$missiles.coverage\" NAME=\"missiles 覆盖结果\" MODIFIED=\"1757073403583\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$3D_Andrews_3D_.coverage\" NAME=\"矢量场图、分组点图、彩色映射折线图、3D 网格图、马赛克图、Andrews 曲线、帕累托图、树状图、彩色散点图（按第三变量着色）、3D 曲面图（带光照效果） 覆盖结果\" MODIFIED=\"1757128476253\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"C:/Downloads/A114 2025数模国赛冲刺资料（第一版）/炫酷图表！数学建模竞赛50多种必备炫酷图表详细介绍+制作教程！/Python绘图代码\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$Q4.coverage\" NAME=\"Q4 覆盖结果\" MODIFIED=\"1757139044163\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$Q4_1.coverage\" NAME=\"Q4_1 覆盖结果\" MODIFIED=\"1757142096726\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan/new\" />\r\n    <SUITE FILE_PATH=\"coverage/Mathematical_modeling$first_search.coverage\" NAME=\"first_search 覆盖结果\" MODIFIED=\"1757076672659\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/jiu_zhi_gan_lan\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision c916ca4d4aca03c4bdafdb01e8ddfaa9306ac00e)
++++ b/.idea/workspace.xml	(date 1757224619343)
+@@ -5,14 +5,14 @@
+   </component>
+   <component name="ChangeListManager">
+     <list default="true" id="5690fcbc-a8b2-4311-9707-a467ac278ae2" name="更改" comment="update">
+-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4_1.py" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4_2.py" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4_3.py" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/gen_anneal_init.py" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/terms_P.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q3_ckwx.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/q3.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/q3_my_text.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/q5_B1.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/q5_b2.py" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q2_2.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q2_2.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/Q4.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/terms_P.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiu_zhi_gan_lan/new/terms_P.py" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -43,13 +43,19 @@
+     "Python.Q2_B3.executor": "Run",
+     "Python.Q2_sim.executor": "Run",
+     "Python.Q3_B3.executor": "Run",
++    "Python.Q3_ckwx.executor": "Run",
+     "Python.Q4.executor": "Run",
+     "Python.Q4_1.executor": "Run",
+     "Python.Q4_2.executor": "Run",
+     "Python.core.executor": "Run",
+     "Python.gen_anneal_init.executor": "Run",
+     "Python.missile_run_photo.executor": "Run",
++    "Python.missile_search.executor": "Run",
+     "Python.po1.executor": "Run",
++    "Python.q3.executor": "Run",
++    "Python.q3_my_text.executor": "Run",
++    "Python.q5_B1.executor": "Run",
++    "Python.q5_b2.executor": "Run",
+     "Python.result_q2.executor": "Run",
+     "Python.terms_P.executor": "Run",
+     "Python.基础散点图、带趋势线的散点图、分组散点图、气泡图、基础折线图、多系列折线图、带误差线的折线图、阶梯折线图、基础柱状图、水平柱状图.executor": "Run",
+Index: jiu_zhi_gan_lan/new/q5_b2.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/new/q5_b2.py b/jiu_zhi_gan_lan/new/q5_b2.py
+new file mode 100644
+--- /dev/null	(date 1757224501011)
++++ b/jiu_zhi_gan_lan/new/q5_b2.py	(date 1757224501011)
+@@ -0,0 +1,288 @@
++import numpy as np
++import pandas as pd
++from tqdm import tqdm
++
++# ---------------- 常量 ----------------
++V_MISSILE = 300
++M_POS = {'M1': np.array([20000, 0, 2000]),
++         'M2': np.array([19000, 600, 2100]),
++         'M3': np.array([18000, -600, 1900])}
++TARGET = np.array([0, 200, 5])
++DRONE_POS = {'FY1': np.array([17800, 0, 1800]),
++             'FY2': np.array([12000, 1400, 1400]),
++             'FY3': np.array([6000, -3000, 700]),
++             'FY4': np.array([11000, 2000, 1800]),
++             'FY5': np.array([13000, -2000, 1300])}
++R_SMOKE = 10
++SINK = 3
++EFFECTIVE_DURATION = 20
++
++
++# -------------- 导弹轨迹函数 --------------
++def missile_pos(t, m):
++    """计算导弹在时间t的位置"""
++    direction = TARGET - M_POS[m]
++    direction = direction / np.linalg.norm(direction)
++    return M_POS[m] + direction * V_MISSILE * t
++
++
++# -------------- 简易遮蔽积分 --------------
++def simple_mask(t_rel, drop_pos, m):
++    """计算单枚烟幕弹的遮蔽时间"""
++    total_mask = 0.0
++    time_step = 0.1
++
++    missile_start = M_POS[m]
++    distance_to_target = np.linalg.norm(missile_start - TARGET)
++    max_time = min(60, distance_to_target / V_MISSILE)
++
++    for t in np.arange(0, max_time, time_step):
++        m_pos = missile_pos(t, m)
++
++        time_after_explosion = t - t_rel
++        if time_after_explosion < 0 or time_after_explosion > EFFECTIVE_DURATION:
++            continue
++
++        cloud_z = drop_pos[2] - SINK * time_after_explosion
++        if cloud_z < 0:
++            continue
++
++        cloud_pos = np.array([drop_pos[0], drop_pos[1], cloud_z])
++        distance = np.linalg.norm(m_pos - cloud_pos)
++        if distance <= R_SMOKE:
++            total_mask += time_step
++
++    return total_mask
++
++
++# -------------- 评估无人机对导弹的遮蔽能力 --------------
++def evaluate_drone_for_missile(drone, missile, test_times=[5, 10, 15]):
++    """评估无人机对特定导弹的遮蔽能力"""
++    drone_pos = DRONE_POS[drone]
++    missile_pos = M_POS[missile]
++
++    best_mask = 0
++    best_t = 0
++
++    # 测试几个典型时间点
++    for t_rel in test_times:
++        # 简单估算投放点（朝向导弹方向）
++        direction = missile_pos - drone_pos
++        distance = np.linalg.norm(direction)
++        if distance > 0:
++            direction = direction / distance
++
++            # 估算投放点
++            drop_pos = drone_pos + direction * 100 * t_rel  # 简单估算
++
++            mask_time = simple_mask(t_rel, drop_pos, missile)
++            if mask_time > best_mask:
++                best_mask = mask_time
++                best_t = t_rel
++
++    return best_mask, best_t
++
++
++# -------------- 智能分配导弹到无人机 --------------
++def smart_assign_missiles_to_drones():
++    """智能分配导弹到无人机"""
++    assignments = {}
++    remaining_drones = set(DRONE_POS.keys())
++    remaining_missiles = set(M_POS.keys())
++
++    print("开始智能分配导弹到无人机...")
++
++    # 第一阶段：为每个导弹分配最佳的无人机
++    missile_assignments = {}
++
++    for missile in list(remaining_missiles):
++        best_drone = None
++        best_mask = 0
++
++        print(f"\n为导弹 {missile} 寻找最佳无人机:")
++
++        # 尝试所有可用无人机
++        for drone in remaining_drones:
++            mask_time, _ = evaluate_drone_for_missile(drone, missile)
++            print(f"  {drone}: 预估遮蔽时间 {mask_time:.2f}s")
++
++            if mask_time > best_mask:
++                best_mask = mask_time
++                best_drone = drone
++
++        if best_drone and best_mask > 0:
++            missile_assignments[missile] = best_drone
++            remaining_drones.remove(best_drone)
++            remaining_missiles.remove(missile)
++            print(f"  分配: {best_drone} -> {missile} (遮蔽时间: {best_mask:.2f}s)")
++        else:
++            print(f"  警告: 没有找到能有效遮蔽 {missile} 的无人机")
++
++    # 第二阶段：为剩余无人机分配导弹
++    print(f"\n剩余无人机: {remaining_drones}")
++    print(f"剩余导弹: {remaining_missiles}")
++
++    for drone in list(remaining_drones):
++        best_missile = None
++        best_mask = 0
++
++        print(f"\n为无人机 {drone} 寻找最佳导弹:")
++
++        for missile in remaining_missiles:
++            mask_time, _ = evaluate_drone_for_missile(drone, missile)
++            print(f"  导弹 {missile}: 预估遮蔽时间 {mask_time:.2f}s")
++
++            if mask_time > best_mask:
++                best_mask = mask_time
++                best_missile = missile
++
++        if best_missile:
++            missile_assignments[best_missile] = drone
++            remaining_drones.remove(drone)
++            remaining_missiles.remove(best_missile)
++            print(f"  分配: {drone} -> {best_missile} (遮蔽时间: {best_mask:.2f}s)")
++
++    # 第三阶段：如果还有剩余，进行最终分配
++    if remaining_drones and remaining_missiles:
++        print(f"\n最终分配剩余资源:")
++        for drone in remaining_drones:
++            for missile in remaining_missiles:
++                if missile not in missile_assignments:
++                    missile_assignments[missile] = drone
++                    print(f"  强制分配: {drone} -> {missile}")
++                    break
++
++    # 转换为无人机->导弹的映射
++    final_assignments = {}
++    for missile, drone in missile_assignments.items():
++        final_assignments[drone] = missile
++
++    return final_assignments
++
++
++# -------------- 优化单架无人机的策略 --------------
++def optimize_drone_strategy(drone, missile):
++    """优化单架无人机的策略"""
++    drone_pos = DRONE_POS[drone]
++
++    # 简单策略：在导弹航线上选择几个点测试
++    best_mask = 0
++    best_strategy = None
++
++    # 测试不同的投放时间
++    for t_rel in [8, 12, 16, 20]:
++        # 计算导弹在投放时间的位置
++        m_pos_at_t = missile_pos(t_rel, missile)
++
++        # 计算无人机到导弹位置的向量
++        direction = m_pos_at_t - drone_pos
++        distance = np.linalg.norm(direction)
++        if distance > 0:
++            direction = direction / distance
++
++            # 估算投放点（在导弹前方）
++            drop_distance = min(distance, 500)  # 不超过500米
++            drop_pos = drone_pos + direction * drop_distance
++
++            mask_time = simple_mask(t_rel, drop_pos, missile)
++
++            if mask_time > best_mask:
++                best_mask = mask_time
++                best_strategy = {
++                    'drop_pos': drop_pos,
++                    't_rel': t_rel,
++                    'direction': direction,
++                    'mask_time': mask_time
++                }
++
++    return best_strategy, best_mask
++
++
++# ---------------- 主程序 ----------------
++if __name__ == "__main__":
++    # 智能分配导弹到无人机
++    assignments = smart_assign_missiles_to_drones()
++
++    print(f"\n最终分配结果:")
++    for drone, missile in assignments.items():
++        distance = np.linalg.norm(DRONE_POS[drone] - M_POS[missile])
++        print(f"  {drone} -> {missile} (距离: {distance:.0f}m)")
++
++    # 优化每架无人机的策略
++    all_strategies = []
++    total_mask = 0
++
++    for drone, missile in assignments.items():
++        print(f"\n优化 {drone} → {missile}")
++
++        strategy, mask_time = optimize_drone_strategy(drone, missile)
++
++        if strategy and mask_time > 0:
++            print(f"  最佳遮蔽时间: {mask_time:.2f}s")
++            print(f"  投放时间: {strategy['t_rel']:.1f}s")
++            print(
++                f"  投放位置: ({strategy['drop_pos'][0]:.0f}, {strategy['drop_pos'][1]:.0f}, {strategy['drop_pos'][2]:.0f})")
++
++            # 创建3枚弹的策略
++            base_t = strategy['t_rel']
++            drop_pos = strategy['drop_pos']
++
++            for i, t_rel in enumerate([base_t - 1.0, base_t, base_t + 1.0], 1):
++                single_mask = simple_mask(t_rel, drop_pos, missile)
++                total_mask += single_mask
++
++                # 计算航向角和速度
++                drone_init_pos = DRONE_POS[drone]
++                direction_vec = drop_pos - drone_init_pos
++                distance = np.linalg.norm(direction_vec)
++
++                theta_rad = np.arctan2(direction_vec[1], direction_vec[0])
++                theta_deg = np.degrees(theta_rad) % 360
++
++                required_speed = distance / t_rel if t_rel > 0 else 100
++                required_speed = max(70, min(140, required_speed))
++
++                all_strategies.append({
++                    "无人机": drone,
++                    "弹序号": i,
++                    "速度(m/s)": round(required_speed, 2),
++                    "航向角(度)": round(theta_deg, 2),
++                    "目标导弹": missile,
++                    "投放时间(s)": round(t_rel, 2),
++                    "起爆延时(s)": 0.0,
++                    "本枚遮蔽(s)": round(single_mask, 3)
++                })
++
++                print(f"  弹{i}: 时间 {t_rel:.1f}s, 遮蔽 {single_mask:.2f}s")
++        else:
++            print(f"  警告: 未找到有效策略，使用默认值")
++            # 使用默认策略
++            default_drop_pos = DRONE_POS[drone] + np.array([100, 0, 0])
++            for i, t_rel in enumerate([10, 11, 12], 1):
++                single_mask = simple_mask(t_rel, default_drop_pos, missile)
++                total_mask += single_mask
++
++                all_strategies.append({
++                    "无人机": drone,
++                    "弹序号": i,
++                    "速度(m/s)": 100,
++                    "航向角(度)": 0,
++                    "目标导弹": missile,
++                    "投放时间(s)": t_rel,
++                    "起爆延时(s)": 0.0,
++                    "本枚遮蔽(s)": round(single_mask, 3)
++                })
++
++    # 输出结果
++    print(f"\n总遮蔽时间: {total_mask:.2f} s")
++
++    df = pd.DataFrame(all_strategies)
++    df.to_excel("result3_smart.xlsx", index=False)
++    print("已保存 result3_smart.xlsx")
++
++    # 显示汇总信息
++    print("\n各导弹遮蔽情况:")
++    for missile in M_POS.keys():
++        missile_mask = df[df['目标导弹'] == missile]['本枚遮蔽(s)'].sum()
++        attackers = df[df['目标导弹'] == missile]['无人机'].unique()
++        print(f"  {missile}: {missile_mask:.2f}s, 攻击者: {', '.join(attackers)}")
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/new/q3_my_text.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/new/q3_my_text.py b/jiu_zhi_gan_lan/new/q3_my_text.py
+new file mode 100644
+--- /dev/null	(date 1757190819911)
++++ b/jiu_zhi_gan_lan/new/q3_my_text.py	(date 1757190819911)
+@@ -0,0 +1,11 @@
++import numpy as np
++from q3 import validity_time, missile, target_true_pos
++
++# 1. 参数
++t_blast = 1.0
++times = np.arange(0, 6.1, 0.2)
++centers = np.array([missile(t) for t in times])
++cloud_func = lambda t: centers[np.clip(int((t - 0.) / 0.2), 0, len(centers) - 1)] + np.array([0, 0, -3 * (t - 0.)])
++
++# 2. 正确调用（4个参数必须全传）
++print('紧贴弹道+50 m 遮蔽=', validity_time(missile, target_true_pos, cloud_func, t_blast))
+\ No newline at end of file
+Index: jiu_zhi_gan_lan/new/q5_B1.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/jiu_zhi_gan_lan/new/q5_B1.py b/jiu_zhi_gan_lan/new/q5_B1.py
+new file mode 100644
+--- /dev/null	(date 1757216087024)
++++ b/jiu_zhi_gan_lan/new/q5_B1.py	(date 1757216087024)
+@@ -0,0 +1,288 @@
++import numpy as np
++import pandas as pd
++from tqdm import tqdm
++
++# ---------------- 常量 ----------------
++V_MISSILE = 300
++M_POS = {'M1': np.array([20000, 0, 2000]),
++         'M2': np.array([19000, 600, 2100]),
++         'M3': np.array([18000, -600, 1900])}
++TARGET = np.array([0, 200, 5])
++DRONE_POS = {'FY1': np.array([17800, 0, 1800]),
++             'FY2': np.array([12000, 1400, 1400]),
++             'FY3': np.array([6000, -3000, 700]),
++             'FY4': np.array([11000, 2000, 1800]),
++             'FY5': np.array([13000, -2000, 1300])}
++R_SMOKE = 10
++SINK = 3
++EFFECTIVE_DURATION = 20
++
++
++# -------------- 导弹轨迹函数 --------------
++def missile_pos(t, m):
++    """计算导弹在时间t的位置"""
++    direction = TARGET - M_POS[m]
++    direction = direction / np.linalg.norm(direction)
++    return M_POS[m] + direction * V_MISSILE * t
++
++
++# -------------- 简易遮蔽积分 --------------
++def simple_mask(t_rel, drop_pos, m):
++    """计算单枚烟幕弹的遮蔽时间"""
++    total_mask = 0.0
++    time_step = 0.1
++
++    missile_start = M_POS[m]
++    distance_to_target = np.linalg.norm(missile_start - TARGET)
++    max_time = min(60, distance_to_target / V_MISSILE)
++
++    for t in np.arange(0, max_time, time_step):
++        m_pos = missile_pos(t, m)
++
++        time_after_explosion = t - t_rel
++        if time_after_explosion < 0 or time_after_explosion > EFFECTIVE_DURATION:
++            continue
++
++        cloud_z = drop_pos[2] - SINK * time_after_explosion
++        if cloud_z < 0:
++            continue
++
++        cloud_pos = np.array([drop_pos[0], drop_pos[1], cloud_z])
++        distance = np.linalg.norm(m_pos - cloud_pos)
++        if distance <= R_SMOKE:
++            total_mask += time_step
++
++    return total_mask
++
++
++# -------------- 评估无人机对导弹的遮蔽能力 --------------
++def evaluate_drone_for_missile(drone, missile, test_times=[5, 10, 15]):
++    """评估无人机对特定导弹的遮蔽能力"""
++    drone_pos = DRONE_POS[drone]
++    missile_pos = M_POS[missile]
++
++    best_mask = 0
++    best_t = 0
++
++    # 测试几个典型时间点
++    for t_rel in test_times:
++        # 简单估算投放点（朝向导弹方向）
++        direction = missile_pos - drone_pos
++        distance = np.linalg.norm(direction)
++        if distance > 0:
++            direction = direction / distance
++
++            # 估算投放点
++            drop_pos = drone_pos + direction * 100 * t_rel  # 简单估算
++
++            mask_time = simple_mask(t_rel, drop_pos, missile)
++            if mask_time > best_mask:
++                best_mask = mask_time
++                best_t = t_rel
++
++    return best_mask, best_t
++
++
++# -------------- 智能分配导弹到无人机 --------------
++def smart_assign_missiles_to_drones():
++    """智能分配导弹到无人机"""
++    assignments = {}
++    remaining_drones = set(DRONE_POS.keys())
++    remaining_missiles = set(M_POS.keys())
++
++    print("开始智能分配导弹到无人机...")
++
++    # 第一阶段：为每个导弹分配最佳的无人机
++    missile_assignments = {}
++
++    for missile in list(remaining_missiles):
++        best_drone = None
++        best_mask = 0
++
++        print(f"\n为导弹 {missile} 寻找最佳无人机:")
++
++        # 尝试所有可用无人机
++        for drone in remaining_drones:
++            mask_time, _ = evaluate_drone_for_missile(drone, missile)
++            print(f"  {drone}: 预估遮蔽时间 {mask_time:.2f}s")
++
++            if mask_time > best_mask:
++                best_mask = mask_time
++                best_drone = drone
++
++        if best_drone and best_mask > 0:
++            missile_assignments[missile] = best_drone
++            remaining_drones.remove(best_drone)
++            remaining_missiles.remove(missile)
++            print(f"  分配: {best_drone} -> {missile} (遮蔽时间: {best_mask:.2f}s)")
++        else:
++            print(f"  警告: 没有找到能有效遮蔽 {missile} 的无人机")
++
++    # 第二阶段：为剩余无人机分配导弹
++    print(f"\n剩余无人机: {remaining_drones}")
++    print(f"剩余导弹: {remaining_missiles}")
++
++    for drone in list(remaining_drones):
++        best_missile = None
++        best_mask = 0
++
++        print(f"\n为无人机 {drone} 寻找最佳导弹:")
++
++        for missile in remaining_missiles:
++            mask_time, _ = evaluate_drone_for_missile(drone, missile)
++            print(f"  导弹 {missile}: 预估遮蔽时间 {mask_time:.2f}s")
++
++            if mask_time > best_mask:
++                best_mask = mask_time
++                best_missile = missile
++
++        if best_missile:
++            missile_assignments[best_missile] = drone
++            remaining_drones.remove(drone)
++            remaining_missiles.remove(best_missile)
++            print(f"  分配: {drone} -> {best_missile} (遮蔽时间: {best_mask:.2f}s)")
++
++    # 第三阶段：如果还有剩余，进行最终分配
++    if remaining_drones and remaining_missiles:
++        print(f"\n最终分配剩余资源:")
++        for drone in remaining_drones:
++            for missile in remaining_missiles:
++                if missile not in missile_assignments:
++                    missile_assignments[missile] = drone
++                    print(f"  强制分配: {drone} -> {missile}")
++                    break
++
++    # 转换为无人机->导弹的映射
++    final_assignments = {}
++    for missile, drone in missile_assignments.items():
++        final_assignments[drone] = missile
++
++    return final_assignments
++
++
++# -------------- 优化单架无人机的策略 --------------
++def optimize_drone_strategy(drone, missile):
++    """优化单架无人机的策略"""
++    drone_pos = DRONE_POS[drone]
++
++    # 简单策略：在导弹航线上选择几个点测试
++    best_mask = 0
++    best_strategy = None
++
++    # 测试不同的投放时间
++    for t_rel in [8, 12, 16, 20]:
++        # 计算导弹在投放时间的位置
++        m_pos_at_t = missile_pos(t_rel, missile)
++
++        # 计算无人机到导弹位置的向量
++        direction = m_pos_at_t - drone_pos
++        distance = np.linalg.norm(direction)
++        if distance > 0:
++            direction = direction / distance
++
++            # 估算投放点（在导弹前方）
++            drop_distance = min(distance, 500)  # 不超过500米
++            drop_pos = drone_pos + direction * drop_distance
++
++            mask_time = simple_mask(t_rel, drop_pos, missile)
++
++            if mask_time > best_mask:
++                best_mask = mask_time
++                best_strategy = {
++                    'drop_pos': drop_pos,
++                    't_rel': t_rel,
++                    'direction': direction,
++                    'mask_time': mask_time
++                }
++
++    return best_strategy, best_mask
++
++
++# ---------------- 主程序 ----------------
++if __name__ == "__main__":
++    # 智能分配导弹到无人机
++    assignments = smart_assign_missiles_to_drones()
++
++    print(f"\n最终分配结果:")
++    for drone, missile in assignments.items():
++        distance = np.linalg.norm(DRONE_POS[drone] - M_POS[missile])
++        print(f"  {drone} -> {missile} (距离: {distance:.0f}m)")
++
++    # 优化每架无人机的策略
++    all_strategies = []
++    total_mask = 0
++
++    for drone, missile in assignments.items():
++        print(f"\n优化 {drone} → {missile}")
++
++        strategy, mask_time = optimize_drone_strategy(drone, missile)
++
++        if strategy and mask_time > 0:
++            print(f"  最佳遮蔽时间: {mask_time:.2f}s")
++            print(f"  投放时间: {strategy['t_rel']:.1f}s")
++            print(
++                f"  投放位置: ({strategy['drop_pos'][0]:.0f}, {strategy['drop_pos'][1]:.0f}, {strategy['drop_pos'][2]:.0f})")
++
++            # 创建3枚弹的策略
++            base_t = strategy['t_rel']
++            drop_pos = strategy['drop_pos']
++
++            for i, t_rel in enumerate([base_t - 1.0, base_t, base_t + 1.0], 1):
++                single_mask = simple_mask(t_rel, drop_pos, missile)
++                total_mask += single_mask
++
++                # 计算航向角和速度
++                drone_init_pos = DRONE_POS[drone]
++                direction_vec = drop_pos - drone_init_pos
++                distance = np.linalg.norm(direction_vec)
++
++                theta_rad = np.arctan2(direction_vec[1], direction_vec[0])
++                theta_deg = np.degrees(theta_rad) % 360
++
++                required_speed = distance / t_rel if t_rel > 0 else 100
++                required_speed = max(70, min(140, required_speed))
++
++                all_strategies.append({
++                    "无人机": drone,
++                    "弹序号": i,
++                    "速度(m/s)": round(required_speed, 2),
++                    "航向角(度)": round(theta_deg, 2),
++                    "目标导弹": missile,
++                    "投放时间(s)": round(t_rel, 2),
++                    "起爆延时(s)": 0.0,
++                    "本枚遮蔽(s)": round(single_mask, 3)
++                })
++
++                print(f"  弹{i}: 时间 {t_rel:.1f}s, 遮蔽 {single_mask:.2f}s")
++        else:
++            print(f"  警告: 未找到有效策略，使用默认值")
++            # 使用默认策略
++            default_drop_pos = DRONE_POS[drone] + np.array([100, 0, 0])
++            for i, t_rel in enumerate([10, 11, 12], 1):
++                single_mask = simple_mask(t_rel, default_drop_pos, missile)
++                total_mask += single_mask
++
++                all_strategies.append({
++                    "无人机": drone,
++                    "弹序号": i,
++                    "速度(m/s)": 100,
++                    "航向角(度)": 0,
++                    "目标导弹": missile,
++                    "投放时间(s)": t_rel,
++                    "起爆延时(s)": 0.0,
++                    "本枚遮蔽(s)": round(single_mask, 3)
++                })
++
++    # 输出结果
++    print(f"\n总遮蔽时间: {total_mask:.2f} s")
++
++    df = pd.DataFrame(all_strategies)
++    df.to_excel("result3_smart.xlsx", index=False)
++    print("已保存 result3_smart.xlsx")
++
++    # 显示汇总信息
++    print("\n各导弹遮蔽情况:")
++    for missile in M_POS.keys():
++        missile_mask = df[df['目标导弹'] == missile]['本枚遮蔽(s)'].sum()
++        attackers = df[df['目标导弹'] == missile]['无人机'].unique()
++        print(f"  {missile}: {missile_mask:.2f}s, 攻击者: {', '.join(attackers)}")
+\ No newline at end of file

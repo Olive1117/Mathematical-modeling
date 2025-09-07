@@ -40,13 +40,13 @@ def terms(m, fy, t, d):
     v = Lfy / t
     if 70 <= v <= 140 and P[0] >= 0 and P[1] >= 0 and P[2] >= 0:
         # print("now", t, "v", v, "lfy", Lfy, "lm", Lm, "fy", fy, "m", m, "P", P, "alpha", alpha, "h", H)
-        # print("now", t, "v", v, "lfy", Lfy, "lm", Lm, "fy", fy, "m", m, "P", P, "alpha", alpha, "h", H)
+        print("now", t, "v", v, "lfy", Lfy, "lm", Lm, "fy", fy, "m", m, "P", P, "alpha", alpha, "h", H)
         return v, P
     return np.inf, None
 
 if __name__ == '__main__':
 
-    for d in np.arange(0, 20000, 100):
+    for d in np.arange(0, 1, 100):
         n = 0
         for t in np.arange(0.1, 70, 0.1):
             fyv, p = terms(m1_pos, fy5_pos, t, d)
